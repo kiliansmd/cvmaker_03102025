@@ -9,6 +9,12 @@ interface CandidateProfileDisplayProps {
 export default function CandidateProfileDisplay({ profileData }: CandidateProfileDisplayProps) {
   const candidateData = profileData
 
+  const onEdit = (path: string, value: string) => {
+    if (typeof window === 'undefined') return
+    const event = new CustomEvent('profile-inline-edit', { detail: { path, value } })
+    window.dispatchEvent(event)
+  }
+
   const hasItems = (arr: any[] | undefined) => arr && arr.length > 0
 
   return (
@@ -34,7 +40,14 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
           <div className="inline-block px-4 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-6 backdrop-blur-sm">
             Professionelles Kandidatenprofil | getexperts.io
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight">{candidateData.title}</h1>
+            <h1
+              className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight outline-none"
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e) => onEdit('title', e.currentTarget.textContent || '')}
+            >
+              {candidateData.title}
+            </h1>
           {(candidateData.salaryExpectation ||
             candidateData.availability ||
             candidateData.location ||
@@ -43,19 +56,40 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               {candidateData.salaryExpectation && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Euro className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">Gehalt: {candidateData.salaryExpectation}</span>
+                  <span
+                    className="text-lg outline-none"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => onEdit('salaryExpectation', e.currentTarget.textContent || '')}
+                  >
+                    Gehalt: {candidateData.salaryExpectation}
+                  </span>
                 </div>
               )}
               {candidateData.availability && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Clock className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">{candidateData.availability}</span>
+                  <span
+                    className="text-lg outline-none"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => onEdit('availability', e.currentTarget.textContent || '')}
+                  >
+                    {candidateData.availability}
+                  </span>
                 </div>
               )}
               {candidateData.location && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <MapPin className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">{candidateData.location}</span>
+                  <span
+                    className="text-lg outline-none"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => onEdit('location', e.currentTarget.textContent || '')}
+                  >
+                    {candidateData.location}
+                  </span>
                 </div>
               )}
               {candidateData.experienceYears && (

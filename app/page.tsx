@@ -49,6 +49,22 @@ export default function HomePage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  // Inline-Editing Listener: nimmt Änderungen aus der Vorschau entgegen
+  // und aktualisiert das generierte Profil
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('profile-inline-edit', (window as any)._inlineEditHandler)
+    ;(window as any)._inlineEditHandler = (e: any) => {
+      const { path, value } = e.detail || {}
+      setGeneratedProfile((prev: any) => {
+        if (!prev) return prev
+        const next = { ...prev }
+        next[path] = value
+        return next
+      })
+    }
+    window.addEventListener('profile-inline-edit', (window as any)._inlineEditHandler)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsGenerating(true)
