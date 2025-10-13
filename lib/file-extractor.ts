@@ -2,25 +2,34 @@ import mammoth from "mammoth"
 
 export async function extractTextFromFile(file: File): Promise<string> {
   const fileType = file.type
+  const fileName = file.name.toLowerCase()
   const arrayBuffer = await file.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
 
   try {
-    if (fileType === "application/pdf") {
-      return await extractTextFromPDF(buffer)
-    } else if (
+    // DOCX-First: Empfohlen und zuverlässig
+    if (
       fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      fileType === "application/msword"
+      fileType === "application/msword" ||
+      fileName.endsWith(".docx") ||
+      fileName.endsWith(".doc")
     ) {
+      console.log("✅ DOCX erkannt, nutze mammoth (empfohlen)")
       return await extractTextFromDOCX(buffer)
-    } else if (fileType === "text/plain") {
+    } else if (fileType === "text/plain" || fileName.endsWith(".txt")) {
+      console.log("✅ TXT erkannt")
       return buffer.toString("utf-8")
+    } else if (fileType === "application/pdf" || fileName.endsWith(".pdf")) {
+      console.log("⚠️ PDF erkannt, versuche Extraktion (Fallback: DOCX empfohlen)")
+      return await extractTextFromPDF(buffer)
     } else {
-      throw new Error(`Nicht unterstützter Dateityp: ${fileType}`)
+      throw new Error(`Nicht unterstützter Dateityp: ${fileType}. Bitte DOCX, PDF oder TXT verwenden.`)
     }
   } catch (error) {
     console.error("Fehler bei der Textextraktion:", error)
-    throw new Error("Fehler beim Lesen der Datei. Bitte stellen Sie sicher, dass die Datei korrekt formatiert ist.")
+    throw new Error(
+      `Fehler beim Lesen der Datei: ${error instanceof Error ? error.message : String(error)}. Empfehlung: Nutzen Sie DOCX-Dateien für beste Ergebnisse.`,
+    )
   }
 }
 
