@@ -54,12 +54,12 @@ NODE_ENV=production
 
 ### 4. Deploy Konfiguration
 
-**Automatische Erkennung:**
-Railway erkennt automatisch:
+**Automatische Erkennung (robust):**
+Railway Settings:
 - ✅ Node.js 18.x
-- ✅ Next.js Framework
-- ✅ Build Command: `pnpm run build`
-- ✅ Start Command: `pnpm start`
+- ✅ Build: `pnpm run build`
+- ✅ Start: `pnpm start` (Standalone)
+- ✅ Healthcheck: `/api/health`
 
 **Build-Prozess:**
 1. Dependencies installieren (~1-2 Min)
@@ -67,6 +67,13 @@ Railway erkennt automatisch:
 3. Production Server starten (~30 Sek)
 
 **Gesamtdauer: ~3-5 Minuten**
+
+### Stabilität & Best Practices
+
+- DOCX‑first (mammoth), PDF via pdfjs‑dist (Uint8Array, kein Worker)
+- OpenAI JSON‑Mode statt strict Schema
+- Keine React‑Komponenten in Serverdaten (Icons → `null`)
+- `next.config.mjs` mit `output: 'standalone'` und Aliases `canvas=false`, `encoding=false`
 
 ### 5. Domain Setup
 
