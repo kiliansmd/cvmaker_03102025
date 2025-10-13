@@ -1,18 +1,4 @@
 import type { ParsedCV } from "./cv-parser"
-import {
-  Database,
-  FileText,
-  Settings,
-  Users,
-  Server,
-  Monitor,
-  Cloud,
-  Shield,
-  Target,
-  Building,
-  Award,
-  Globe,
-} from "lucide-react"
 
 export interface CandidateProfileData {
   title: string
@@ -76,20 +62,10 @@ export interface CandidateProfileData {
   motivationFactors: string[]
 }
 
-const iconMap: { [key: string]: any } = {
-  Database,
-  FileText,
-  Settings,
-  Users,
-  Server,
-  Monitor,
-  Cloud,
-  Shield,
-  Target,
-  Building,
-  Award,
-  Globe,
-}
+// Wichtiger Hinweis:
+// In Client Components dürfen keine Funktionen/Komponenten als Daten übergeben werden.
+// Daher verwenden wir für Icons keine React-Komponenten mehr, sondern setzen sie auf null
+// oder könnten alternativ string-Keys verwenden und in der Client-Komponente mappen.
 
 export function generateProfileFromParsedCV(
   parsedCV: ParsedCV,
@@ -175,7 +151,7 @@ export function generateProfileFromParsedCV(
     description: exp.description,
     tags: (exp.responsibilities || []).slice(0, 4),
     scope: `Erfolgreiche ${exp.title}-Tätigkeit bei ${exp.company}.`,
-    icon: iconMap[index % 2 === 0 ? "Server" : "Database"],
+    icon: null,
   }))
 
   // Experience Timeline
@@ -191,24 +167,24 @@ export function generateProfileFromParsedCV(
     {
       title: `Senior ${formData.position}`,
       description: `Weiterentwicklung zum Senior ${formData.position} mit strategischer Verantwortung für komplexe Projekte und technische Führung.`,
-      icon: iconMap.Target,
+      icon: null,
     },
     {
       title: "Teamleitung / Management",
       description: `Aufbau zur Teamleitung oder Management-Position mit Fokus auf Mitarbeiterentwicklung und strategische Planung.`,
-      icon: iconMap.Users,
+      icon: null,
     },
     {
       title: "Spezialisierung",
       description: `Vertiefung der Expertise in ${(parsedCV.skills.technical || []).slice(0, 2).join(" und ")} für spezialisierte Beratungsdienstleistungen.`,
-      icon: iconMap.Building,
+      icon: null,
     },
   ]
 
   // Interests (aus Skills)
   const interests = (parsedCV.skills.technical || []).slice(0, 4).map((skill, index) => ({
     name: skill,
-    icon: iconMap[["Cloud", "Shield", "Award", "Globe"][index % 4]],
+    icon: null,
   }))
 
   // Personality Traits
@@ -276,7 +252,7 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
       id: "1",
       name: parsedCV.experience[0].title,
       description: parsedCV.experience[0].description,
-      icon: iconMap.Server,
+      icon: null,
     })
   }
 
@@ -286,7 +262,7 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
       id: "2",
       name: parsedCV.skills.technical.slice(0, 3).join(", "),
       description: `Umfassende Expertise in ${parsedCV.skills.technical.slice(0, 3).join(", ")} mit praktischer Erfahrung in komplexen Projekten.`,
-      icon: iconMap.Database,
+      icon: null,
     })
   }
 
@@ -296,7 +272,7 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
       id: "3",
       name: `${parsedCV.experience[1].title} & Projektmanagement`,
       description: parsedCV.experience[1].description,
-      icon: iconMap.Settings,
+      icon: null,
     })
   }
 
@@ -306,7 +282,7 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
       id: "4",
       name: parsedCV.certifications[0],
       description: `Zertifizierte Expertise mit ${parsedCV.certifications[0]} und kontinuierlicher Weiterbildung.`,
-      icon: iconMap.Award,
+      icon: null,
     })
   }
 
