@@ -1,5 +1,6 @@
 import { OpenAI } from "openai"
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions"
+import { parseCVWithSchema } from './openai-service'
 
 // Typdefinitionen für das strukturierte CV-Parsing
 export interface ParsedCV {
@@ -190,36 +191,8 @@ ${additionalInfo ? `\n\nZusätzliche Informationen vom Recruiter:\n${additionalI
 Extrahiere nun ALLE Informationen aus diesem CV in das strukturierte JSON-Format.`
 
   try {
-    const messages: ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ]
-
-  const completion = await openai.chat.completions.create({
-      model: primaryModel,
-      messages,
-      // Einige Accounts verlangen explicit additionalProperties:false
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "cv_parsing",
-          strict: true,
-          schema: { ...CV_PARSING_SCHEMA, additionalProperties: false },
-        },
-      },
-      temperature: 0.1,
-      max_tokens: 4000,
-    })
-
-    const content = completion.choices[0]?.message?.content
-    if (!content) {
-      throw new Error("Keine Antwort von OpenAI erhalten")
-    }
-
-    const parsedData = tryParseJson(content) as ParsedCV | null
-    if (!parsedData) {
-      throw new Error("Antwort konnte nicht als JSON geparst werden")
-    }
+    // Verwende den neuen Service mit explizitem Schema
+    const parsedData = (await parseCVWithSchema(cvText)) as unknown as ParsedCV
     return parsedData
   } catch (error) {
     console.error("Fehler beim CV-Parsing mit OpenAI:", error)

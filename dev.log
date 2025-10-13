@@ -131,3 +131,60 @@ Warning: Only plain objects can be passed to Client Components from Server Compo
                           ^^^^^^^^^^^^^^^
     at stringify (<anonymous>)
 digest: "3366501288"
+ ✓ Compiled in 580ms (1088 modules)
+ ✓ Compiled in 128ms (292 modules)
+ ✓ Compiled in 208ms (292 modules)
+ ✓ Compiled in 206ms (292 modules)
+ ✓ Compiled in 286ms (292 modules)
+ ✓ Compiled in 182ms (292 modules)
+ ✓ Compiled in 206ms (292 modules)
+ ✓ Compiled in 76ms (292 modules)
+ ✓ Compiled in 115ms (292 modules)
+ ⨯ ./lib/pdf-parser.ts:11:1
+Module not found: Can't resolve 'pdfjs-dist/legacy/build/pdf.worker.entry'
+   9 | // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  10 | // @ts-ignore - worker entry export is JS
+> 11 | import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry'
+     | ^
+  12 |
+  13 | // configure worker for Node/bundled environment
+  14 | // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./lib/file-extractor.ts
+./app/actions/process-cv.ts
+./node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fkilian%2FDownloads%2Fcandidate-profile%20(3)%2Fapp%2Factions%2Fprocess-cv.ts%22%2C%5B%22processCVAction%22%5D%5D%5D&__client_imported__=true!
+ ⨯ ./lib/pdf-parser.ts:11:1
+Module not found: Can't resolve 'pdfjs-dist/legacy/build/pdf.worker.entry'
+   9 | // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  10 | // @ts-ignore - worker entry export is JS
+> 11 | import pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker.entry'
+     | ^
+  12 |
+  13 | // configure worker for Node/bundled environment
+  14 | // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./lib/file-extractor.ts
+./app/actions/process-cv.ts
+./node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2FUsers%2Fkilian%2FDownloads%2Fcandidate-profile%20(3)%2Fapp%2Factions%2Fprocess-cv.ts%22%2C%5B%22processCVAction%22%5D%5D%5D&__client_imported__=true!
+ ⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.16
+  - Local:        http://localhost:3000
+  - Network:      http://0.0.0.0:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1846ms
+ ⚠ Found a change in next.config.mjs. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.16
+  - Local:        http://localhost:3000
+  - Network:      http://0.0.0.0:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1492ms

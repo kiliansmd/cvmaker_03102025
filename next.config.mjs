@@ -16,6 +16,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: false,
   },
+  webpack: (config) => {
+    // prevent optional native modules resolution on server
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      canvas: false,
+      encoding: false,
+    }
+    return config
+  },
 }
 
 export default nextConfig

@@ -26,27 +26,16 @@ export async function extractTextFromFile(file: File): Promise<string> {
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    // Dynamischer Import: unterstützt sowohl ESM als auch CJS Exporte
-    const pdfParseModule: any = await import("pdf-parse")
-    const pdfParse = (pdfParseModule.default ?? pdfParseModule) as (input: Buffer, options?: any) => Promise<{ text: string }>
-
-    const data = await pdfParse(buffer, {
-      // Optionen um Test-Datei-Probleme zu vermeiden
-      max: 0,
-    })
-
-    return data.text
+    const { extractTextFromPDF } = await import('./pdf-parser')
+    return await extractTextFromPDF(buffer)
   } catch (error) {
-    console.error("PDF-Parsing-Fehler:", error)
-
-    // Fallback: Versuche rohen Text aus Buffer zu extrahieren
+    console.error('PDF-Parsing-Fehler:', error)
     try {
-      const text = buffer.toString("utf-8")
-      // Entferne nicht-druckbare Zeichen
-      return text.replace(/[^\x20-\x7E\n\r\t]/g, " ").trim()
+      const text = buffer.toString('utf-8')
+      return text.replace(/[^\x20-\x7E\n\r\t]/g, ' ').trim()
     } catch {
       throw new Error(
-        "PDF konnte nicht verarbeitet werden. Bitte versuchen Sie es mit einer DOCX-Datei oder konvertieren Sie die PDF.",
+        'PDF konnte nicht verarbeitet werden. Bitte versuchen Sie es mit einer DOCX-Datei oder konvertieren Sie die PDF.',
       )
     }
   }
