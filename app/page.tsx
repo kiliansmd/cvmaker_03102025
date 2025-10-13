@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import CandidateProfileDisplay from "@/components/candidate-profile-display"
+import ProfileEditor from "@/components/profile-editor"
 import { processCVAction } from "./actions/process-cv"
 import Image from "next/image"
 
@@ -113,12 +114,23 @@ export default function HomePage() {
   if (generatedProfile) {
     return (
       <div>
-        <div className="fixed top-4 left-4 z-50 no-print">
-          <Button onClick={handleReset} variant="outline" className="bg-white shadow-lg">
-            ← Neues Profil erstellen
-          </Button>
+        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50 border-b">
+          <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
+            <div className="flex gap-3">
+              <Button onClick={handleReset} variant="outline" className="bg-white shadow-sm">
+                ← Neues Profil erstellen
+              </Button>
+            </div>
+          </div>
         </div>
-        <CandidateProfileDisplay profileData={generatedProfile} />
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 px-4 py-6">
+          <div className="order-2 lg:order-1">
+            <ProfileEditor initial={generatedProfile} onSave={(upd) => setGeneratedProfile(upd)} />
+          </div>
+          <div className="order-1 lg:order-2 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-auto rounded-xl border border-slate-200">
+            <CandidateProfileDisplay profileData={generatedProfile} />
+          </div>
+        </div>
       </div>
     )
   }
