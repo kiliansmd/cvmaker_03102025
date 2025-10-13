@@ -1,0 +1,133 @@
+ WARN  Unsupported engine: wanted: {"node":">=18 <21"} (current: {"node":"v24.5.0","pnpm":"9.12.0"})
+
+> my-v0-project@0.1.0 dev /Users/kilian/Downloads/candidate-profile (3)
+> next dev "--port" "3000" "--hostname" "0.0.0.0"
+
+  ▲ Next.js 14.2.16
+  - Local:        http://localhost:3000
+  - Network:      http://0.0.0.0:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1621ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1831ms (1088 modules)
+ GET / 200 in 2035ms
+ ✓ Compiled in 215ms (292 modules)
+ ✓ Compiled in 390ms (1088 modules)
+ GET / 200 in 110ms
+📄 Starte CV-Verarbeitung für: hablhlbk
+📎 Datei: David_Thiebes_CV.pdf Typ: application/pdf Größe: 105513
+🔍 Extrahiere Text aus Datei...
+PDF-Parsing-Fehler: TypeError: Object.defineProperty called on non-object
+    at Object.defineProperty (<anonymous>)
+    at __webpack_require__.r (/Users/kilian/Downloads/candidate-profile (3)/.next/server/webpack-runtime.js:141:21)
+    at eval (webpack-internal:///(action-browser)/./node_modules/.pnpm/pdfjs-dist@5.4.296/node_modules/pdfjs-dist/legacy/build/pdf.mjs:1:21)
+    at (action-browser)/./node_modules/.pnpm/pdfjs-dist@5.4.296/node_modules/pdfjs-dist/legacy/build/pdf.mjs (/Users/kilian/Downloads/candidate-profile (3)/.next/server/vendor-chunks/pdfjs-dist@5.4.296.js:20:1)
+    at __webpack_require__ (/Users/kilian/Downloads/candidate-profile (3)/.next/server/webpack-runtime.js:33:43)
+    at eval (webpack-internal:///(action-browser)/./node_modules/.pnpm/pdf-parse@2.2.16/node_modules/pdf-parse/dist/esm/PDFParse.js:5:89)
+    at (action-browser)/./node_modules/.pnpm/pdf-parse@2.2.16/node_modules/pdf-parse/dist/esm/PDFParse.js (/Users/kilian/Downloads/candidate-profile (3)/.next/server/vendor-chunks/pdf-parse@2.2.16.js:40:1)
+    at __webpack_require__ (/Users/kilian/Downloads/candidate-profile (3)/.next/server/webpack-runtime.js:33:43)
+    at eval (webpack-internal:///(action-browser)/./node_modules/.pnpm/pdf-parse@2.2.16/node_modules/pdf-parse/dist/esm/index.js:6:70)
+    at (action-browser)/./node_modules/.pnpm/pdf-parse@2.2.16/node_modules/pdf-parse/dist/esm/index.js (/Users/kilian/Downloads/candidate-profile (3)/.next/server/vendor-chunks/pdf-parse@2.2.16.js:160:1)
+    at __webpack_require__ (/Users/kilian/Downloads/candidate-profile (3)/.next/server/webpack-runtime.js:33:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async extractTextFromPDF (webpack-internal:///(action-browser)/./lib/file-extractor.ts:29:32)
+    at async extractTextFromFile (webpack-internal:///(action-browser)/./lib/file-extractor.ts:13:20)
+    at async processCVAction (webpack-internal:///(action-browser)/./app/actions/process-cv.ts:42:22)
+    at async /Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:418
+    at async rk (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:38:8148)
+    at async r3 (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:41:1256)
+    at async doRender (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1413:30)
+    at async cacheEntry.responseCache.get.routeKind (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1574:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1482:28)
+    at async DevServer.renderPageComponent (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1908:24)
+    at async DevServer.renderToResponseImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1946:32)
+    at async DevServer.pipeImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:921:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:817:17)
+    at async /Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:350:24)
+    at async requestHandlerImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:374:13)
+    at async Server.requestListener (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13)
+✅ Text extrahiert. Länge: 105454 Zeichen
+🤖 Parse CV mit OpenAI GPT-4...
+Fehler beim CV-Parsing mit OpenAI: BadRequestError: 400 Invalid schema for response_format 'cv_parsing': In context=('properties', 'personalInfo'), 'additionalProperties' is required to be supplied and to be false.
+    at APIError.generate (webpack-internal:///(action-browser)/./node_modules/.pnpm/openai@6.3.0_ws@8.18.3_zod@3.25.76/node_modules/openai/core/error.mjs:61:20)
+    at OpenAI.makeStatusError (webpack-internal:///(action-browser)/./node_modules/.pnpm/openai@6.3.0_ws@8.18.3_zod@3.25.76/node_modules/openai/client.mjs:205:71)
+    at OpenAI.makeRequest (webpack-internal:///(action-browser)/./node_modules/.pnpm/openai@6.3.0_ws@8.18.3_zod@3.25.76/node_modules/openai/client.mjs:373:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async parseCVWithAI (webpack-internal:///(action-browser)/./lib/cv-parser.ts:239:28)
+    at async processCVAction (webpack-internal:///(action-browser)/./app/actions/process-cv.ts:55:28)
+    at async /Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:39:418
+    at async rk (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:38:8148)
+    at async r3 (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:41:1256)
+    at async doRender (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1413:30)
+    at async cacheEntry.responseCache.get.routeKind (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1574:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1482:28)
+    at async DevServer.renderPageComponent (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1908:24)
+    at async DevServer.renderToResponseImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:1946:32)
+    at async DevServer.pipeImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:921:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/base-server.js:817:17)
+    at async /Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:350:24)
+    at async requestHandlerImpl (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/router-server.js:374:13)
+    at async Server.requestListener (/Users/kilian/Downloads/candidate-profile (3)/node_modules/.pnpm/next@14.2.16_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/next/dist/server/lib/start-server.js:141:13) {
+  status: 400,
+  headers: Headers {
+    date: 'Mon, 13 Oct 2025 11:19:41 GMT',
+    'content-type': 'application/json',
+    'content-length': '283',
+    connection: 'keep-alive',
+    'access-control-expose-headers': 'X-Request-ID',
+    'openai-organization': 'user-yqjcu1q1qghzyszcnrv0gitq',
+    'openai-processing-ms': '28',
+    'openai-project': 'proj_mbEpBmIKCeuZB0KFPwiL6cd7',
+    'openai-version': '2020-10-01',
+    'x-envoy-upstream-service-time': '170',
+    'x-ratelimit-limit-requests': '500',
+    'x-ratelimit-limit-tokens': '30000',
+    'x-ratelimit-remaining-requests': '499',
+    'x-ratelimit-remaining-tokens': '3311',
+    'x-ratelimit-reset-requests': '120ms',
+    'x-ratelimit-reset-tokens': '53.378s',
+    'x-request-id': 'req_6055a592e1e748b18069c5818d414876',
+    'x-openai-proxy-wasm': 'v0.1',
+    'cf-cache-status': 'DYNAMIC',
+    'set-cookie': '__cf_bm=xgikVfiu9CLBpHLUYQYauIsDDD5lwq3DQ96tnehNHPU-1760354381-1.0.1.1-1G5iMMGqy1w9QCUarvKRNSkMUoEvfFdhLu1BkgpHWe_dGsq7kg6_ofaJFaMZmMOBvUerc.YMK5Kp9ntTGwVThhPzULzOixbh1xVTz8X8bwc; path=/; expires=Mon, 13-Oct-25 11:49:41 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None, _cfuvid=AHhD9UJP07ma1_K50aPrLjPGUcRbhXXJ7umN0mViCIo-1760354381708-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-content-type-options': 'nosniff',
+    server: 'cloudflare',
+    'cf-ray': '98de7170ee803600-FRA',
+    'alt-svc': 'h3=":443"; ma=86400'
+  },
+  requestID: 'req_6055a592e1e748b18069c5818d414876',
+  error: {
+    message: "Invalid schema for response_format 'cv_parsing': In context=('properties', 'personalInfo'), 'additionalProperties' is required to be supplied and to be false.",
+    type: 'invalid_request_error',
+    param: 'response_format',
+    code: null
+  },
+  code: null,
+  param: 'response_format',
+  type: 'invalid_request_error'
+}
+✅ CV erfolgreich geparst
+📋 Generiere Profil-Daten...
+✅ Profil erfolgreich generiert!
+Warning: Only plain objects can be passed to Client Components from Server Components. Classes or other objects with methods are not supported.
+  {id: "1", name: ..., description: ..., icon: {$$typeof: ..., render: ...}}
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ POST / 200 in 31414ms
+ ⨯ Error: Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+  {$$typeof: ..., render: function Server}
+                          ^^^^^^^^^^^^^^^
+    at stringify (<anonymous>)
+digest: "3366501288"

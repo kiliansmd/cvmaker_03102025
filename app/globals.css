@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: "Inter", system-ui, sans-serif;
+  }
+
+  body {
+    @apply antialiased;
+    color: rgb(var(--foreground-rgb));
+    background: rgb(var(--background-rgb));
+  }
+}
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+/* Druckoptimierungen */
+@page {
+  size: A4;
+  margin: 0.5in; /* Standardränder für den Druck */
+}
+
+@media print {
+  /* Grundlegende Druckeinstellungen */
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    background: white !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Elemente ausblenden, die nicht gedruckt werden sollen */
+  .no-print {
+    display: none !important;
+  }
+
+  /* Seitenumbrüche nach Hauptabschnitten */
+  .page-break-after {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* Keine Seitenumbrüche innerhalb dieser Elemente */
+  .keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Überschriften nicht am Ende einer Seite */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Bilder und Tabellen nicht umbrechen */
+  img,
+  table,
+  figure {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Listen nicht am Anfang einer Seite umbrechen */
+  ul,
+  ol,
+  dl {
+    page-break-before: avoid;
+    break-before: avoid;
+  }
+
+  /* Hintergrundfarben und Bilder drucken */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Anpassungen für Schatten und Effekte */
+  .shadow-lg,
+  .shadow-md,
+  .shadow-sm,
+  .shadow-xl {
+    box-shadow: none !important;
+  }
+
+  /* Hover-Effekte entfernen */
+  .hover\:shadow-md,
+  .hover\:shadow-xl,
+  .hover\:translate-y-\[-5px\] {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Optimierte Abstände für den Druck */
+  section {
+    padding-top: 20mm;
+    padding-bottom: 15mm;
+  }
+
+  /* Spezielle Anpassungen für die Titelseite */
+  section:first-of-type {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-top: 30mm;
+    padding-bottom: 30mm;
+  }
+
+  /* Links im Druck sichtbar machen */
+  a {
+    text-decoration: underline;
+    color: rgb(var(--foreground-rgb)) !important;
+  }
+
+  /* Optimierte Schriftgrößen für den Druck */
+  h1 {
+    font-size: 24pt !important;
+  }
+
+  h2 {
+    font-size: 18pt !important;
+  }
+
+  h3 {
+    font-size: 14pt !important;
+  }
+
+  p,
+  li,
+  span {
+    font-size: 11pt !important;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .keep-together {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+    break-after: page;
+  }
+}
+
+/* PDF Export spezifische Stile */
+.pdf-container {
+  width: 100%;
+  background-color: white;
+}
