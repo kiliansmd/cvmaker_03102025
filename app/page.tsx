@@ -123,11 +123,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-8 px-4 py-6">
-          <div className="order-2 lg:order-1">
+        <div className="max-w-7xl mx-auto grid gap-6 px-4 py-6 lg:grid-cols-3">
+          <div className="order-2 lg:order-1 lg:col-span-1">
             <ProfileEditor initial={generatedProfile} onSave={(upd) => setGeneratedProfile(upd)} />
           </div>
-          <div className="order-1 lg:order-2 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-auto rounded-xl border border-slate-200">
+          <div className="order-1 lg:order-2 lg:col-span-2 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-auto rounded-xl border border-slate-200 bg-white">
             <CandidateProfileDisplay profileData={generatedProfile} />
           </div>
         </div>

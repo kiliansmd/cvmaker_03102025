@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,6 +14,8 @@ interface ProfileEditorProps {
 
 export default function ProfileEditor({ initial, onSave, onCancel }: ProfileEditorProps) {
   const [draft, setDraft] = useState<any>(initial || {})
+  const [spellWarn, setSpellWarn] = useState<string | null>(null)
+  const [checking, setChecking] = useState(false)
 
   const set = (path: string, value: any) => {
     setDraft((prev: any) => {
@@ -30,6 +33,15 @@ export default function ProfileEditor({ initial, onSave, onCancel }: ProfileEdit
 
   return (
     <div className="space-y-6">
+      {spellWarn && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-amber-800 text-sm flex gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <div>
+            <div className="font-medium">Hinweis zur Rechtschreibung</div>
+            <div className="opacity-90">{spellWarn}</div>
+          </div>
+        </div>
+      )}
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <label className="text-sm text-slate-600">Titel / Zielposition</label>
@@ -72,7 +84,39 @@ export default function ProfileEditor({ initial, onSave, onCancel }: ProfileEdit
       </div>
 
       <div className="flex gap-3">
-        <Button onClick={() => onSave(draft)} className="bg-[#282550] text-white">
+        <Button
+          onClick={async () => {
+            // sehr einfache Heuristik + optionaler Abruf eines lokalen Endpunkts zur KI-Prüfung
+            setChecking(true)
+            try {
+              const text = [draft.title, draft.location, draft.availability, draft.salaryExpectation, (draft.profileSummary || []).join("\n")]
+                .filter(Boolean)
+                .join("\n")
+              // primitive Heuristik: sehr lange Wörter und doppelte Leerzeichen
+              const longWords = (text.match(/\b\w{32,}\b/g) || []).length
+              const doubleSpaces = /\s{2,}/.test(text)
+              let warn = ""
+              if (longWords > 0) warn += `Auffällig lange Wörter gefunden (${longWords}). `
+              if (doubleSpaces) warn += "Doppelte Leerzeichen gefunden. "
+
+              // Optional: lokaler Spellcheck-Endpunkt (nicht-blockierend)
+              try {
+                const resp = await fetch("/api/spellcheck", { method: "POST", body: JSON.stringify({ text }), headers: { "Content-Type": "application/json" } })
+                if (resp.ok) {
+                  const data = await resp.json()
+                  if (data?.warning) warn += data.warning
+                }
+              } catch {}
+
+              setSpellWarn(warn || null)
+              onSave(draft)
+            } finally {
+              setChecking(false)
+            }
+          }}
+          className="bg-[#282550] text-white"
+          disabled={checking}
+        >
           Speichern & Vorschau aktualisieren
         </Button>
         {onCancel && (
