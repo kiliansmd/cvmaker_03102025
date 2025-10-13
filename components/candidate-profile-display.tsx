@@ -9,9 +9,9 @@ interface CandidateProfileDisplayProps {
 export default function CandidateProfileDisplay({ profileData }: CandidateProfileDisplayProps) {
   const candidateData = profileData
 
-  const onEdit = (path: string, value: string) => {
+  const onEdit = (path: string, value: string, kind?: 'array') => {
     if (typeof window === 'undefined') return
-    const event = new CustomEvent('profile-inline-edit', { detail: { path, value } })
+    const event = new CustomEvent('profile-inline-edit', { detail: { path, value, kind } })
     window.dispatchEvent(event)
   }
 
@@ -145,7 +145,15 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               <h2 className="text-2xl font-semibold text-[#282550] mb-4">Zusammenfassung</h2>
               <div className="space-y-3 text-slate-700">
                 {candidateData.profileSummary.map((p: string, idx: number) => (
-                  <p key={idx}>{p}</p>
+                  <p
+                    key={idx}
+                    className="outline-none"
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => onEdit(`profileSummary[${idx}]`, e.currentTarget.textContent || '')}
+                  >
+                    {p}
+                  </p>
                 ))}
               </div>
             </div>
@@ -157,10 +165,24 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               <div>
                 <h3 className="text-xl font-semibold text-[#282550] mb-3">Top Skills</h3>
                 <div className="space-y-3">
-                  {candidateData.topSkills.slice(0, 4).map((s: any) => (
-                    <div key={s.id} className="rounded-xl border border-slate-200 p-4">
-                      <div className="font-medium text-[#282550]">{s.name}</div>
-                      <div className="text-slate-600 text-sm mt-1">{s.description}</div>
+                  {candidateData.topSkills.slice(0, 4).map((s: any, idx: number) => (
+                    <div key={s.id || idx} className="rounded-xl border border-slate-200 p-4">
+                      <div
+                        className="font-medium text-[#282550] outline-none"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => onEdit(`topSkills[${idx}].name`, e.currentTarget.textContent || '')}
+                      >
+                        {s.name}
+                      </div>
+                      <div
+                        className="text-slate-600 text-sm mt-1 outline-none"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => onEdit(`topSkills[${idx}].description`, e.currentTarget.textContent || '')}
+                      >
+                        {s.description}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -173,7 +195,15 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
                 <h3 className="text-xl font-semibold text-[#282550] mb-3">Qualifikationen</h3>
                 <ul className="list-disc ml-5 space-y-1 text-slate-700">
                   {candidateData.qualifications.map((q: string, idx: number) => (
-                    <li key={idx}>{q}</li>
+                    <li
+                      key={idx}
+                      className="outline-none"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => onEdit(`qualifications[${idx}]`, e.currentTarget.textContent || '')}
+                    >
+                      {q}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -189,7 +219,14 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
                   {candidateData.personalDetails.map((d: any, idx: number) => (
                     <div key={idx} className="grid grid-cols-3 gap-3 p-3">
                       <dt className="col-span-1 text-slate-500 text-sm">{d.label}</dt>
-                      <dd className="col-span-2 text-slate-800 text-sm">{d.value}</dd>
+                      <dd
+                        className="col-span-2 text-slate-800 text-sm outline-none"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => onEdit(`personalDetails[${idx}].value`, e.currentTarget.textContent || '')}
+                      >
+                        {d.value}
+                      </dd>
                     </div>
                   ))}
                 </dl>
@@ -204,8 +241,22 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
                   <ul className="space-y-2">
                     {candidateData.itSkills.map((s: any, idx: number) => (
                       <li key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                        <span className="text-slate-700">{s.skill}</span>
-                        <span className="text-slate-500">{s.level}</span>
+                        <span
+                          className="text-slate-700 outline-none"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => onEdit(`itSkills[${idx}].skill`, e.currentTarget.textContent || '')}
+                        >
+                          {s.skill}
+                        </span>
+                        <span
+                          className="text-slate-500 outline-none"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => onEdit(`itSkills[${idx}].level`, e.currentTarget.textContent || '')}
+                        >
+                          {s.level}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -217,8 +268,22 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
                   <ul className="space-y-2">
                     {candidateData.languages.map((l: any, idx: number) => (
                       <li key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                        <span className="text-slate-700">{l.lang}</span>
-                        <span className="text-slate-500">{l.level}</span>
+                        <span
+                          className="text-slate-700 outline-none"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => onEdit(`languages[${idx}].lang`, e.currentTarget.textContent || '')}
+                        >
+                          {l.lang}
+                        </span>
+                        <span
+                          className="text-slate-500 outline-none"
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => onEdit(`languages[${idx}].level`, e.currentTarget.textContent || '')}
+                        >
+                          {l.level}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -232,20 +297,38 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             <div>
               <h3 className="text-xl font-semibold text-[#282550] mb-3">Schlüsselprojekte</h3>
               <div className="space-y-4">
-                {candidateData.keyProjects.map((p: any) => (
-                  <div key={p.id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="font-medium text-[#282550]">{p.title}</div>
-                    <div className="text-xs text-slate-500 mb-2">{p.category}</div>
-                    <p className="text-sm text-slate-700">{p.description}</p>
-                    {hasItems(p.tags) && (
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {p.tags.map((t: string, idx: number) => (
-                          <span key={idx} className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                {candidateData.keyProjects.map((p: any, idx: number) => (
+                  <div key={p.id || idx} className="rounded-xl border border-slate-200 p-4 space-y-1">
+                    <div
+                      className="font-medium text-[#282550] outline-none"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => onEdit(`keyProjects[${idx}].title`, e.currentTarget.textContent || '')}
+                    >
+                      {p.title}
+                    </div>
+                    <div className="text-xs text-slate-500 mb-2 outline-none" contentEditable suppressContentEditableWarning onBlur={(e) => onEdit(`keyProjects[${idx}].category`, e.currentTarget.textContent || '')}>
+                      {p.category}
+                    </div>
+                    <p
+                      className="text-sm text-slate-700 outline-none"
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => onEdit(`keyProjects[${idx}].description`, e.currentTarget.textContent || '')}
+                    >
+                      {p.description}
+                    </p>
+                    <div className="mt-2">
+                      <span className="text-xs text-slate-500 mr-2">Tags (Kommagetrennt):</span>
+                      <span
+                        className="text-xs outline-none rounded border border-slate-200 px-2 py-1"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => onEdit(`keyProjects[${idx}].tags`, (e.currentTarget.textContent || ''), 'array')}
+                      >
+                        {(p.tags || []).join(', ')}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -257,11 +340,11 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             <div>
               <h3 className="text-xl font-semibold text-[#282550] mb-3">Berufserfahrung</h3>
               <div className="space-y-4">
-                {candidateData.experienceTimeline.map((e: any) => (
-                  <div key={e.id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="text-sm text-slate-500">{e.dateRange}</div>
-                    <div className="font-medium text-[#282550]">{e.title}</div>
-                    <p className="text-sm text-slate-700">{e.description}</p>
+                {candidateData.experienceTimeline.map((e: any, idx: number) => (
+                  <div key={e.id || idx} className="rounded-xl border border-slate-200 p-4 space-y-1">
+                    <div className="text-sm text-slate-500 outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].dateRange`, ev.currentTarget.textContent || '')}>{e.dateRange}</div>
+                    <div className="font-medium text-[#282550] outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].title`, ev.currentTarget.textContent || '')}>{e.title}</div>
+                    <p className="text-sm text-slate-700 outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].description`, ev.currentTarget.textContent || '')}>{e.description}</p>
                   </div>
                 ))}
               </div>

@@ -54,11 +54,34 @@ export default function HomePage() {
   if (typeof window !== 'undefined') {
     window.removeEventListener('profile-inline-edit', (window as any)._inlineEditHandler)
     ;(window as any)._inlineEditHandler = (e: any) => {
-      const { path, value } = e.detail || {}
+      const { path, value, kind } = e.detail || {}
       setGeneratedProfile((prev: any) => {
         if (!prev) return prev
         const next = { ...prev }
-        next[path] = value
+        if (path.includes('[')) {
+          // Pfade wie field[0].sub
+          const match = path.match(/^(.*?)\[(\d+)\](?:\.(.*))?$/)
+          if (match) {
+            const [, arr, idxStr, sub] = match
+            const idx = Number(idxStr)
+            next[arr] = Array.isArray(next[arr]) ? [...next[arr]] : []
+            next[arr][idx] = { ...(next[arr][idx] || {}) }
+            if (sub) {
+              next[arr][idx][sub] = value
+            } else if (kind === 'array') {
+              next[arr][idx] = String(value)
+            } else {
+              next[arr][idx] = value
+            }
+          }
+        } else if (kind === 'array') {
+          next[path] = String(value)
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+        } else {
+          ;(next as any)[path] = value
+        }
         return next
       })
     }
