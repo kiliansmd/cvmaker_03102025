@@ -104,6 +104,47 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
 
       {/* Inhalt – Details / Skills / Sprachen */}
       <section className="py-16 px-6 bg-white">
+        {/* Highlights (Konversionsstark) */}
+        <div className="max-w-6xl mx-auto mb-8">
+          <div className="ui-card p-6">
+            <h2 className="ui-section-title text-xl mb-4">Highlights</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Höchster Abschluss */}
+              <div>
+                <div className="ui-muted text-sm mb-1">Höchster Abschluss</div>
+                <div>{(candidateData.education || [])[0] || "–"}</div>
+              </div>
+              {/* Top Skills */}
+              <div>
+                <div className="ui-muted text-sm mb-1">Top Skills</div>
+                <div className="flex flex-wrap gap-2">
+                  {(candidateData.itSkills || []).slice(0,3).map((s: any, i: number) => (
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{s.skill}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Top Tools */}
+              <div>
+                <div className="ui-muted text-sm mb-1">Top Tools</div>
+                <div className="flex flex-wrap gap-2">
+                  {(candidateData.topSkills || []).slice(0,3).map((t: any, i: number) => (
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{t.name}</span>
+                  ))}
+                </div>
+              </div>
+              {/* Zertifikate */}
+              <div>
+                <div className="ui-muted text-sm mb-1">Zertifikate</div>
+                <div className="flex flex-wrap gap-2">
+                  {(candidateData.qualifications || []).slice(0,3).map((q: string, i: number) => (
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{q}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Details */}
           <div className="ui-card p-6">
@@ -118,9 +159,9 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             </div>
           </div>
 
-          {/* IT-Skills */}
+          {/* Kernkompetenzen */}
           <div className="ui-card p-6">
-            <h2 className="ui-section-title text-xl mb-4">IT‑Skills</h2>
+            <h2 className="ui-section-title text-xl mb-4">Kernkompetenzen</h2>
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.itSkills || []).map((s: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 bg-white">
