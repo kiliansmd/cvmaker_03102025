@@ -28,7 +28,7 @@ export default function AttachmentPdfViewer({ src }: Props) {
     async function render() {
       try {
         // Hole die Blob-Daten und übergebe Uint8Array statt URL (stabiler für pdfjs)
-        const res = await fetch(src)
+        const res = await fetch(src, { cache: 'no-store' })
         const ab = await res.arrayBuffer()
         const uint8 = new Uint8Array(ab)
         const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true })

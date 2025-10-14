@@ -15,6 +15,31 @@ export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedProfile, setGeneratedProfile] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [history, setHistory] = useState<{ past: any[]; future: any[] }>({ past: [], future: [] })
+
+  const deepClone = (obj: any) => JSON.parse(JSON.stringify(obj))
+  const applyProfile = (next: any) => {
+    setHistory((h) => ({ past: [...h.past, deepClone(generatedProfile)], future: [] }))
+    setGeneratedProfile(next)
+  }
+  const undo = () => {
+    if (!generatedProfile) return
+    setHistory((h) => {
+      if (h.past.length === 0) return h
+      const prev = h.past[h.past.length - 1]
+      setGeneratedProfile(prev)
+      return { past: h.past.slice(0, -1), future: [deepClone(generatedProfile), ...h.future] }
+    })
+  }
+  const redo = () => {
+    if (!generatedProfile) return
+    setHistory((h) => {
+      if (h.future.length === 0) return h
+      const next = h.future[0]
+      setGeneratedProfile(next)
+      return { past: [...h.past, deepClone(generatedProfile)], future: h.future.slice(1) }
+    })
+  }
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
@@ -140,8 +165,18 @@ export default function HomePage() {
           <Button onClick={() => setIsEditing((v) => !v)} className="bg-[rgb(var(--brand))] hover:bg-[rgb(var(--brand-600))] text-white">
             {isEditing ? 'Speichern' : 'Bearbeiten'}
           </Button>
+          {isEditing && (
+            <div className="flex gap-2">
+              <Button type="button" onClick={undo} className="bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50">
+                Zurück
+              </Button>
+              <Button type="button" onClick={redo} className="bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50">
+                Vor
+              </Button>
+            </div>
+          )}
         </div>
-        <CandidateProfileDisplay profileData={generatedProfile} editable={isEditing} onChange={setGeneratedProfile} />
+        <CandidateProfileDisplay profileData={generatedProfile} editable={isEditing} onChange={applyProfile} />
       </div>
     )
   }
