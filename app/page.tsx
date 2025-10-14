@@ -57,6 +57,72 @@ export default function HomePage() {
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [additionalInfo, setAdditionalInfo] = useState("")
 
+  async function convertFileToImages(file: File): Promise<string[]> {
+    const name = (file?.name || '').toLowerCase()
+    const type = file?.type || ''
+    const ab = await file.arrayBuffer()
+
+    // PDF → pdfjs → JPEGs
+    if (type.includes('pdf') || name.endsWith('.pdf')) {
+      const pdfjsLib: any = await import('pdfjs-dist/legacy/build/pdf')
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const workerSrc = (await import('pdfjs-dist/legacy/build/pdf.worker.entry')).default
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
+
+      const uint8 = new Uint8Array(ab)
+      const pdf = await pdfjsLib.getDocument({ data: uint8, useSystemFonts: true }).promise
+      const out: string[] = []
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i)
+        const viewport = page.getViewport({ scale: 1.4 })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        const ctx = canvas.getContext('2d')!
+        await page.render({ canvasContext: ctx, viewport }).promise
+        out.push(canvas.toDataURL('image/jpeg', 0.9))
+      }
+      return out
+    }
+
+    // DOCX/DOC/TXT → HTML → html2canvas → JPEG
+    const { default: html2canvas } = await import('html2canvas')
+    const container = document.createElement('div')
+    container.style.width = '794px'
+    container.style.padding = '24px'
+    container.style.background = 'white'
+    container.style.color = '#0f172a'
+    container.style.lineHeight = '1.5'
+    container.style.fontFamily = 'Inter, system-ui, sans-serif'
+    container.style.position = 'fixed'
+    container.style.left = '-99999px'
+    document.body.appendChild(container)
+
+    if (name.endsWith('.doc') || name.endsWith('.docx')) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const mammoth = await import('mammoth/mammoth.browser')
+      const { value: html } = await mammoth.convertToHtml({ arrayBuffer: ab })
+      container.innerHTML = html
+    } else {
+      const decoder = new TextDecoder('utf-8')
+      const text = decoder.decode(ab)
+      const pre = document.createElement('pre')
+      pre.textContent = text
+      pre.style.whiteSpace = 'pre-wrap'
+      pre.style.fontSize = '14px'
+      pre.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, monospace'
+      container.appendChild(pre)
+    }
+    const canvas = await html2canvas(container, { backgroundColor: '#ffffff', scale: 2 })
+    const url = canvas.toDataURL('image/jpeg', 0.92)
+    document.body.removeChild(container)
+    return [url]
+  }
+
   const buildClientFallbackProfile = (
     name: string,
     position: string,
@@ -153,26 +219,26 @@ export default function HomePage() {
 
       console.log("📤 Sende CV zur Verarbeitung...")
 
-      // Rufe Server Action auf
+      // Rufe Server Action auf (Schritt 1: Parsing)
       const result = await processCVAction(formDataToSend)
 
       if (result && typeof result === 'object' && 'success' in result && (result as any).success && (result as any).data) {
         console.log("✅ Profil erfolgreich erstellt!")
-        // Anhang (Originaldokument) als Download-Link (nur in aktueller Session)
+        // Schritt 2: Nach dem Parsing → Datei zu Bildern konvertieren
         let attachments: any[] = []
         if (cvFile) {
-          const fileBuffer = await cvFile.arrayBuffer()
-          const blob = new Blob([fileBuffer], { type: cvFile.type || 'application/octet-stream' })
-          const url = URL.createObjectURL(blob)
-          attachments = [
-            {
-              name: cvFile.name,
-              type: cvFile.type,
-              size: cvFile.size,
-              url,
-              file: cvFile,
-            },
-          ]
+          try {
+            const images = await convertFileToImages(cvFile)
+            attachments = images.map((src, idx) => ({
+              name: `${cvFile.name.replace(/\.[^.]+$/, '')}_page-${idx + 1}.jpg`,
+              type: 'image/jpeg',
+              size: src.length,
+              url: src,
+            }))
+          } catch (convErr) {
+            console.warn('Konvertierung zu Bildern fehlgeschlagen:', convErr)
+            attachments = []
+          }
         }
         // Wenn Daten leer/unvollständig sind, mische Formularinfos rein
         const data = (result as any).data || {}
@@ -189,6 +255,7 @@ export default function HomePage() {
           qualifications: Array.isArray(data.qualifications) ? data.qualifications : [],
           personalDetails: Array.isArray(data.personalDetails) ? data.personalDetails : [],
         }
+        // Schritt 3/4: Ziellayout mit Feldern + konvertierten Bildern rendern
         setGeneratedProfile((prev: any) => ({ ...normalized, attachments }))
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
