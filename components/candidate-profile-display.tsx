@@ -684,6 +684,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                     {(f.url || f.file) && (
                       <AttachmentAnyViewer key={`att-${f.url ?? f.name}-${idx}`} src={f.url} file={f.file} fileName={f.name} mimeType={f.type} />
                     )}
+                    {/* Keine PDF-Download-Links mehr anbieten; nur Bildspeicherung pro Seite (im Viewer) */}
                   </div>
                 ))}
               </div>

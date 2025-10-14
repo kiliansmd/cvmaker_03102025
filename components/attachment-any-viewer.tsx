@@ -59,9 +59,21 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
         if (cancelled) return
         // Fall 1: PDF → Seiten rendern → JPEGs
         if ((mimeType || file?.type || "").includes("pdf") || (src && src.toLowerCase().endsWith('.pdf'))) {
-          const uint8 = new Uint8Array(ab)
-          const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true })
-          const pdf = await loadingTask.promise
+          let pdf: any
+          try {
+            const uint8 = new Uint8Array(ab)
+            pdf = await pdfjsLib.getDocument({ data: uint8, useSystemFonts: true, isEvalSupported: true }).promise
+          } catch (primaryErr) {
+            if (src) {
+              try {
+                pdf = await pdfjsLib.getDocument({ url: src, useSystemFonts: true, isEvalSupported: true }).promise
+              } catch (secondaryErr) {
+                throw secondaryErr
+              }
+            } else {
+              throw primaryErr
+            }
+          }
           const out: string[] = []
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i)
@@ -160,7 +172,12 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
   return (
     <div className="space-y-4">
       {images.map((src, i) => (
-        <img key={i} src={src} alt={`${fileName} – Seite ${i+1}`} className="rounded-[var(--radius)] border border-slate-200 shadow-sm w-full h-auto" />
+        <div key={i} className="space-y-2">
+          <img src={src} alt={`${fileName} – Seite ${i+1}`} className="rounded-[var(--radius)] border border-slate-200 shadow-sm w-full h-auto" />
+          <div className="text-right">
+            <a href={src} download={`${fileName.replace(/\.[^.]+$/, '')}_page-${i+1}.jpg`} className="px-2 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50">Bild speichern</a>
+          </div>
+        </div>
       ))}
     </div>
   )
