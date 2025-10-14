@@ -15,8 +15,14 @@
 }
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  /* Brand */
+  --brand: 40, 37, 80; /* #282550 */
+  --brand-600: 26, 26, 56; /* dunkel */
+  --accent: 16, 185, 129; /* emerald-500 */
+  --muted: 100, 116, 139; /* slate-500 */
+
+  --foreground-rgb: 15, 23, 42; /* slate-900 */
+  --background-rgb: 248, 250, 252; /* slate-50 */
 }
 
 /* Druckoptimierungen */
