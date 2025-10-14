@@ -14,7 +14,12 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
   return (
     <div className="min-h-screen bg-white font-sans" id="candidate-profile">
       {/* Cover Page */}
-      <section className="relative h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[rgb(var(--brand))] to-[rgb(var(--brand-600))] text-center overflow-hidden page-break-after">
+      <section className="relative h-screen flex flex-col items-center justify-center p-8 text-center overflow-hidden page-break-after">
+        {/* Dekorativer Hintergrund */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.06),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.04),transparent_40%)]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--brand))] to-[rgb(var(--brand-600))] opacity-95" />
+        </div>
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('/interwoven-algorithms.png')] bg-no-repeat bg-cover"></div>
         </div>

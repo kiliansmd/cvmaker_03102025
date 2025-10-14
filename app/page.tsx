@@ -80,16 +80,20 @@ export default function HomePage() {
       if (result.success && result.data) {
         console.log("✅ Profil erfolgreich erstellt!")
         // Anhang (Originaldokument) als Download-Link (nur in aktueller Session)
-        const attachments = cvFile
-          ? [
-              {
-                name: cvFile.name,
-                type: cvFile.type,
-                size: cvFile.size,
-                url: URL.createObjectURL(cvFile),
-              },
-            ]
-          : []
+        let attachments: any[] = []
+        if (cvFile) {
+          const fileBuffer = await cvFile.arrayBuffer()
+          const blob = new Blob([fileBuffer], { type: cvFile.type || 'application/octet-stream' })
+          const url = URL.createObjectURL(blob)
+          attachments = [
+            {
+              name: cvFile.name,
+              type: cvFile.type,
+              size: cvFile.size,
+              url,
+            },
+          ]
+        }
         setGeneratedProfile({ ...result.data, attachments })
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
