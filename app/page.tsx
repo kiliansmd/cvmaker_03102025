@@ -170,6 +170,7 @@ export default function HomePage() {
               type: cvFile.type,
               size: cvFile.size,
               url,
+              file: cvFile,
             },
           ]
         }
@@ -186,7 +187,7 @@ export default function HomePage() {
           const fileBuffer = await cvFile.arrayBuffer()
           const blob = new Blob([fileBuffer], { type: cvFile.type || 'application/octet-stream' })
           const url = URL.createObjectURL(blob)
-          attachments = [{ name: cvFile.name, type: cvFile.type, size: cvFile.size, url }]
+          attachments = [{ name: cvFile.name, type: cvFile.type, size: cvFile.size, url, file: cvFile }]
         }
         const fallback = buildClientFallbackProfile(
           formData.name,
