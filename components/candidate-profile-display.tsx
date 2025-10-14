@@ -226,7 +226,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <h2 className="ui-section-title text-xl mb-4">Details</h2>
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.personalDetails || []).map((row: any, idx: number) => (
-                <div key={idx} className="grid grid-cols-3 md:grid-cols-3 bg-white">
+                <div key={idx} className="grid grid-cols-3 md:grid-cols-3 bg-white group">
                   <div
                     className="col-span-1 px-4 py-3 text-slate-500"
                     contentEditable={editable}
@@ -244,6 +244,16 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   next[idx] = { ...row, value: e.currentTarget.textContent }
                   onChange?.({ ...candidateData, personalDetails: next })
                 }}>{row.value}</div>
+                  {editable && (
+                    <div className="col-span-3 px-4 pb-3 -mt-2 flex gap-2 flex-wrap">
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, personalDetails: moveItem(candidateData.personalDetails, idx, idx-1) })}>↑</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, personalDetails: moveItem(candidateData.personalDetails, idx, idx+1) })}>↓</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                        const next = candidateData.personalDetails.filter((_: any, i: number)=> i!==idx)
+                        onChange?.({ ...candidateData, personalDetails: next })
+                      }}>Entfernen</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -269,7 +279,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <h2 className="ui-section-title text-xl mb-4">Kernkompetenzen</h2>
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.itSkills || []).map((s: any, idx: number) => (
-                <div key={idx} className="grid grid-cols-3 bg-white">
+                <div key={idx} className="grid grid-cols-3 bg-white group">
                 <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                   if(!editable) return
                   const next=[...(candidateData.itSkills||[])]
@@ -282,6 +292,16 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   next[idx] = { ...s, level: e.currentTarget.textContent }
                   onChange?.({ ...candidateData, itSkills: next })
                 }}>{s.level}</div>
+                  {editable && (
+                    <div className="col-span-3 px-4 pb-3 -mt-2 flex gap-2 flex-wrap">
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, itSkills: moveItem(candidateData.itSkills, idx, idx-1) })}>↑</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, itSkills: moveItem(candidateData.itSkills, idx, idx+1) })}>↓</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                        const next = candidateData.itSkills.filter((_: any, i: number)=> i!==idx)
+                        onChange?.({ ...candidateData, itSkills: next })
+                      }}>Entfernen</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -307,7 +327,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <h2 className="ui-section-title text-xl mb-4">Sprachen</h2>
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.languages || []).map((l: any, idx: number) => (
-                <div key={idx} className="grid grid-cols-3 bg-white">
+                <div key={idx} className="grid grid-cols-3 bg-white group">
                 <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                   if(!editable) return
                   const next=[...(candidateData.languages||[])]
@@ -320,6 +340,16 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   next[idx] = { ...l, level: e.currentTarget.textContent }
                   onChange?.({ ...candidateData, languages: next })
                 }}>{l.level}</div>
+                  {editable && (
+                    <div className="col-span-3 px-4 pb-3 -mt-2 flex gap-2 flex-wrap">
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, languages: moveItem(candidateData.languages, idx, idx-1) })}>↑</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, languages: moveItem(candidateData.languages, idx, idx+1) })}>↓</button>
+                      <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                        const next = candidateData.languages.filter((_: any, i: number)=> i!==idx)
+                        onChange?.({ ...candidateData, languages: next })
+                      }}>Entfernen</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -570,19 +600,29 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               <h2 className="ui-section-title text-xl mb-4">Ausbildung</h2>
               <ul className="space-y-2">
                 {candidateData.education.map((ed: string, idx: number) => (
-                  <li
-                    key={idx}
-                    className="leading-relaxed"
-                    contentEditable={editable}
-                    suppressContentEditableWarning
-                    onBlur={(e) => {
-                      if (!editable) return
-                      const next = [...candidateData.education]
-                      next[idx] = e.currentTarget.textContent || ''
-                      onChange?.({ ...candidateData, education: next })
-                    }}
-                  >
-                    {ed}
+                  <li key={idx} className="leading-relaxed">
+                    <span
+                      contentEditable={editable}
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        if (!editable) return
+                        const next = [...candidateData.education]
+                        next[idx] = e.currentTarget.textContent || ''
+                        onChange?.({ ...candidateData, education: next })
+                      }}
+                    >
+                      {ed}
+                    </span>
+                    {editable && (
+                      <span className="ml-3 inline-flex gap-1 align-middle">
+                        <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, education: moveItem(candidateData.education, idx, idx-1) })}>↑</button>
+                        <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=> onChange?.({ ...candidateData, education: moveItem(candidateData.education, idx, idx+1) })}>↓</button>
+                        <button type="button" className="px-2 py-0.5 text-[11px] rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                          const next = candidateData.education.filter((_: any, i: number)=> i!==idx)
+                          onChange?.({ ...candidateData, education: next })
+                        }}>Entfernen</button>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
