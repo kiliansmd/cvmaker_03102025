@@ -42,14 +42,14 @@ export async function processCVAction(formData: FormData) {
       cvText = ""
     }
 
-    const textTooShort = !cvText || cvText.trim().length < 100
+    const hasSomeText = !!cvText && cvText.trim().length >= 10
 
     // 3. Parse CV mit OpenAI
     console.log("🤖 Parse CV mit OpenAI GPT-4...")
     let parsedCV: ParsedCV | null = null
 
     try {
-      if (!textTooShort) {
+      if (hasSomeText) {
         parsedCV = await parseCVWithAI(cvText, additionalInfo)
         console.log("✅ CV erfolgreich geparst")
       }

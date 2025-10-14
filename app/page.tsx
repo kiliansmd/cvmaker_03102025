@@ -174,7 +174,22 @@ export default function HomePage() {
             },
           ]
         }
-        setGeneratedProfile({ ...(result as any).data, attachments })
+        // Wenn Daten leer/unvollständig sind, mische Formularinfos rein
+        const data = (result as any).data || {}
+        const normalized = {
+          ...data,
+          title: data.title || formData.position,
+          availability: data.availability || `Verfügbar in ${formData.availability}`,
+          salaryExpectation: data.salaryExpectation || formData.salary,
+          location: data.location || formData.location,
+          profileSummary: Array.isArray(data.profileSummary) ? data.profileSummary : [],
+          itSkills: Array.isArray(data.itSkills) ? data.itSkills : [],
+          languages: Array.isArray(data.languages) ? data.languages : [],
+          education: Array.isArray(data.education) ? data.education : [],
+          qualifications: Array.isArray(data.qualifications) ? data.qualifications : [],
+          personalDetails: Array.isArray(data.personalDetails) ? data.personalDetails : [],
+        }
+        setGeneratedProfile({ ...normalized, attachments })
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' })
