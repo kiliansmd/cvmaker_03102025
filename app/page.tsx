@@ -189,7 +189,7 @@ export default function HomePage() {
           qualifications: Array.isArray(data.qualifications) ? data.qualifications : [],
           personalDetails: Array.isArray(data.personalDetails) ? data.personalDetails : [],
         }
-        setGeneratedProfile({ ...normalized, attachments })
+        setGeneratedProfile((prev: any) => ({ ...normalized, attachments }))
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' })

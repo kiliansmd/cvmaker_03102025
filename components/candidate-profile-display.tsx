@@ -1,7 +1,11 @@
 "use client"
 import Image from "next/image"
 import { MapPin, Clock, Euro, Phone, Mail, Globe, Check, Briefcase } from "lucide-react"
-import AttachmentAnyViewer from "./attachment-any-viewer"
+import dynamic from "next/dynamic"
+const AttachmentAnyViewer = dynamic(() => import("./attachment-any-viewer"), {
+  ssr: false,
+  loading: () => <div className="p-4 bg-slate-50 border border-slate-200 rounded-[var(--radius)] text-slate-600">Lade Anhang...</div>,
+})
 import { useRef, useState } from "react"
 
 interface CandidateProfileDisplayProps {
@@ -678,7 +682,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       <div className="ui-muted text-sm">{f.type || 'Datei'} • {(f.size / 1024).toFixed(1)} KB</div>
                     </div>
                     {(f.url || f.file) && (
-                      <AttachmentAnyViewer src={f.url} file={f.file} fileName={f.name} mimeType={f.type} />
+                      <AttachmentAnyViewer key={`att-${f.url ?? f.name}-${idx}`} src={f.url} file={f.file} fileName={f.name} mimeType={f.type} />
                     )}
                   </div>
                 ))}
