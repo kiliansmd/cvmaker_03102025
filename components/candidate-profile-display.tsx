@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image"
 import { MapPin, Clock, Euro, Phone, Mail, Globe, Check, Briefcase } from "lucide-react"
-import AttachmentPdfViewer from "./attachment-pdf-viewer"
+import AttachmentAnyViewer from "./attachment-any-viewer"
 import { useRef, useState } from "react"
 
 interface CandidateProfileDisplayProps {
@@ -677,12 +677,8 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       <div className="font-medium truncate">{f.name}</div>
                       <div className="ui-muted text-sm">{f.type || 'Datei'} • {(f.size / 1024).toFixed(1)} KB</div>
                     </div>
-                    {f.type?.includes('pdf') && (f.url || f.file) ? (
-                      <AttachmentPdfViewer src={f.url} file={f.file} />
-                    ) : (
-                      f.url && (
-                        <a href={f.url} download className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50 ui-focus">Herunterladen</a>
-                      )
+                    {(f.url || f.file) && (
+                      <AttachmentAnyViewer src={f.url} file={f.file} fileName={f.name} mimeType={f.type} />
                     )}
                   </div>
                 ))}
