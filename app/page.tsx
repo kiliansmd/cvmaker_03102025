@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import CandidateProfileDisplay from "@/components/candidate-profile-display"
-import ProfileEditor from "@/components/profile-editor"
 import { processCVAction } from "./actions/process-cv"
 import Image from "next/image"
 
@@ -49,45 +48,6 @@ export default function HomePage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Inline-Editing Listener: nimmt Änderungen aus der Vorschau entgegen
-  // und aktualisiert das generierte Profil
-  if (typeof window !== 'undefined') {
-    window.removeEventListener('profile-inline-edit', (window as any)._inlineEditHandler)
-    ;(window as any)._inlineEditHandler = (e: any) => {
-      const { path, value, kind } = e.detail || {}
-      setGeneratedProfile((prev: any) => {
-        if (!prev) return prev
-        const next = { ...prev }
-        if (path.includes('[')) {
-          // Pfade wie field[0].sub
-          const match = path.match(/^(.*?)\[(\d+)\](?:\.(.*))?$/)
-          if (match) {
-            const [, arr, idxStr, sub] = match
-            const idx = Number(idxStr)
-            next[arr] = Array.isArray(next[arr]) ? [...next[arr]] : []
-            next[arr][idx] = { ...(next[arr][idx] || {}) }
-            if (sub) {
-              next[arr][idx][sub] = value
-            } else if (kind === 'array') {
-              next[arr][idx] = String(value)
-            } else {
-              next[arr][idx] = value
-            }
-          }
-        } else if (kind === 'array') {
-          next[path] = String(value)
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-        } else {
-          ;(next as any)[path] = value
-        }
-        return next
-      })
-    }
-    window.addEventListener('profile-inline-edit', (window as any)._inlineEditHandler)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsGenerating(true)
@@ -120,6 +80,10 @@ export default function HomePage() {
       if (result.success && result.data) {
         console.log("✅ Profil erfolgreich erstellt!")
         setGeneratedProfile(result.data)
+        // Vorschau nach oben und im Vollbild anzeigen
+        if (typeof window !== 'undefined') {
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
       } else {
         console.error("❌ Fehler:", result.error)
         setError(result.error || "Ein Fehler ist aufgetreten")
@@ -153,31 +117,28 @@ export default function HomePage() {
   if (generatedProfile) {
     return (
       <div>
-        <div className="sticky top-0 z-50 bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/50 border-b">
-          <div className="max-w-6xl mx-auto flex items-center justify-between px-4 py-3">
-            <div className="flex gap-3">
-              <Button onClick={handleReset} variant="outline" className="bg-white shadow-sm">
-                ← Neues Profil erstellen
-              </Button>
-            </div>
-          </div>
+        <div className="fixed top-4 left-4 z-50 no-print">
+          <Button onClick={handleReset} variant="outline" className="bg-white shadow-lg">
+            ← Neues Profil erstellen
+          </Button>
         </div>
-        <div className="max-w-7xl mx-auto grid gap-6 px-4 py-6 lg:grid-cols-3">
-          <div className="order-2 lg:order-1 lg:col-span-1">
-            <ProfileEditor initial={generatedProfile} onSave={(upd) => setGeneratedProfile(upd)} />
-          </div>
-          <div className="order-1 lg:order-2 lg:col-span-2 lg:sticky lg:top-20 lg:h-[calc(100vh-6rem)] lg:overflow-auto rounded-xl border border-slate-200 bg-white">
-            <CandidateProfileDisplay profileData={generatedProfile} />
-          </div>
-        </div>
+        <CandidateProfileDisplay profileData={generatedProfile} />
       </div>
     )
   }
 
-  // Upload-Formular
+  // Upload-Formular (nur sichtbar, wenn NICHT in Generierung)
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
-      <div className="container mx-auto px-4 py-12">
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex items-center gap-3 text-[#282550]">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="font-semibold">Profil wird erstellt…</span>
+          </div>
+        </div>
+      )}
+      <div className={`container mx-auto px-4 py-12 ${isGenerating ? 'hidden' : ''}`}>
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-12">
