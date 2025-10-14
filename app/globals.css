@@ -166,6 +166,16 @@
     page-break-after: always;
     break-after: page;
   }
+
+  /* UI Utilities */
+  .ui-card {
+    @apply bg-white rounded-[var(--radius)] border border-slate-200 shadow-sm;
+  }
+  .ui-section-title {
+    @apply text-[rgb(var(--brand))] font-semibold tracking-tight;
+  }
+  .ui-muted { color: rgb(var(--muted)); }
+  .ui-focus { @apply focus:outline-none focus:ring-2 focus:ring-offset-2; }
 }
 
 /* PDF Export spezifische Stile */

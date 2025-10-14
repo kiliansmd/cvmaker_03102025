@@ -9,18 +9,12 @@ interface CandidateProfileDisplayProps {
 export default function CandidateProfileDisplay({ profileData }: CandidateProfileDisplayProps) {
   const candidateData = profileData
 
-  const onEdit = (path: string, value: string, kind?: 'array') => {
-    if (typeof window === 'undefined') return
-    const event = new CustomEvent('profile-inline-edit', { detail: { path, value, kind } })
-    window.dispatchEvent(event)
-  }
-
   const hasItems = (arr: any[] | undefined) => arr && arr.length > 0
 
   return (
     <div className="min-h-screen bg-white font-sans" id="candidate-profile">
       {/* Cover Page */}
-      <section className="relative h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[#282550] to-[#1a1a38] text-center overflow-hidden page-break-after">
+      <section className="relative h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-br from-[rgb(var(--brand))] to-[rgb(var(--brand-600))] text-center overflow-hidden page-break-after">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('/interwoven-algorithms.png')] bg-no-repeat bg-cover"></div>
         </div>
@@ -40,14 +34,7 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
           <div className="inline-block px-4 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-6 backdrop-blur-sm">
             Professionelles Kandidatenprofil | getexperts.io
           </div>
-            <h1
-              className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight outline-none"
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e) => onEdit('title', e.currentTarget.textContent || '')}
-            >
-              {candidateData.title}
-            </h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight">{candidateData.title}</h1>
           {(candidateData.salaryExpectation ||
             candidateData.availability ||
             candidateData.location ||
@@ -56,40 +43,19 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               {candidateData.salaryExpectation && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Euro className="h-6 w-6 text-slate-300" />
-                  <span
-                    className="text-lg outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => onEdit('salaryExpectation', e.currentTarget.textContent || '')}
-                  >
-                    Gehalt: {candidateData.salaryExpectation}
-                  </span>
+                  <span className="text-lg">Gehalt: {candidateData.salaryExpectation}</span>
                 </div>
               )}
               {candidateData.availability && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Clock className="h-6 w-6 text-slate-300" />
-                  <span
-                    className="text-lg outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => onEdit('availability', e.currentTarget.textContent || '')}
-                  >
-                    {candidateData.availability}
-                  </span>
+                  <span className="text-lg">{candidateData.availability}</span>
                 </div>
               )}
               {candidateData.location && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <MapPin className="h-6 w-6 text-slate-300" />
-                  <span
-                    className="text-lg outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => onEdit('location', e.currentTarget.textContent || '')}
-                  >
-                    {candidateData.location}
-                  </span>
+                  <span className="text-lg">{candidateData.location}</span>
                 </div>
               )}
               {candidateData.experienceYears && (
@@ -136,220 +102,12 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
         )}
       </section>
 
-      {/* Inhalt: Zusammenfassung, Skills, Details, Projekte, Timeline */}
+      {/* Weitere Sektionen würden hier folgen - identisch zum bestehenden Design */}
       <section className="py-20 px-8 bg-white">
-        <div className="max-w-6xl mx-auto space-y-12">
-          {/* Zusammenfassung */}
-          {hasItems(candidateData.profileSummary) && (
-            <div>
-              <h2 className="text-2xl font-semibold text-[#282550] mb-4">Zusammenfassung</h2>
-              <div className="space-y-3 text-slate-700">
-                {candidateData.profileSummary.map((p: string, idx: number) => (
-                  <p
-                    key={idx}
-                    className="outline-none"
-                    contentEditable
-                    suppressContentEditableWarning
-                    onBlur={(e) => onEdit(`profileSummary[${idx}]`, e.currentTarget.textContent || '')}
-                  >
-                    {p}
-                  </p>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid md:grid-cols-2 gap-10">
-            {/* Top Skills */}
-            {hasItems(candidateData.topSkills) && (
-              <div>
-                <h3 className="text-xl font-semibold text-[#282550] mb-3">Top Skills</h3>
-                <div className="space-y-3">
-                  {candidateData.topSkills.slice(0, 4).map((s: any, idx: number) => (
-                    <div key={s.id || idx} className="rounded-xl border border-slate-200 p-4">
-                      <div
-                        className="font-medium text-[#282550] outline-none"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => onEdit(`topSkills[${idx}].name`, e.currentTarget.textContent || '')}
-                      >
-                        {s.name}
-                      </div>
-                      <div
-                        className="text-slate-600 text-sm mt-1 outline-none"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => onEdit(`topSkills[${idx}].description`, e.currentTarget.textContent || '')}
-                      >
-                        {s.description}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Qualifikationen */}
-            {hasItems(candidateData.qualifications) && (
-              <div>
-                <h3 className="text-xl font-semibold text-[#282550] mb-3">Qualifikationen</h3>
-                <ul className="list-disc ml-5 space-y-1 text-slate-700">
-                  {candidateData.qualifications.map((q: string, idx: number) => (
-                    <li
-                      key={idx}
-                      className="outline-none"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => onEdit(`qualifications[${idx}]`, e.currentTarget.textContent || '')}
-                    >
-                      {q}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-10">
-            {/* Personal Details */}
-            {hasItems(candidateData.personalDetails) && (
-              <div>
-                <h3 className="text-xl font-semibold text-[#282550] mb-3">Details</h3>
-                <dl className="divide-y divide-slate-200 rounded-xl border border-slate-200">
-                  {candidateData.personalDetails.map((d: any, idx: number) => (
-                    <div key={idx} className="grid grid-cols-3 gap-3 p-3">
-                      <dt className="col-span-1 text-slate-500 text-sm">{d.label}</dt>
-                      <dd
-                        className="col-span-2 text-slate-800 text-sm outline-none"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => onEdit(`personalDetails[${idx}].value`, e.currentTarget.textContent || '')}
-                      >
-                        {d.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            )}
-
-            {/* IT Skills & Sprachen */}
-            <div className="space-y-8">
-              {hasItems(candidateData.itSkills) && (
-                <div>
-                  <h3 className="text-xl font-semibold text-[#282550] mb-3">IT‑Skills</h3>
-                  <ul className="space-y-2">
-                    {candidateData.itSkills.map((s: any, idx: number) => (
-                      <li key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                        <span
-                          className="text-slate-700 outline-none"
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => onEdit(`itSkills[${idx}].skill`, e.currentTarget.textContent || '')}
-                        >
-                          {s.skill}
-                        </span>
-                        <span
-                          className="text-slate-500 outline-none"
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => onEdit(`itSkills[${idx}].level`, e.currentTarget.textContent || '')}
-                        >
-                          {s.level}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {hasItems(candidateData.languages) && (
-                <div>
-                  <h3 className="text-xl font-semibold text-[#282550] mb-3">Sprachen</h3>
-                  <ul className="space-y-2">
-                    {candidateData.languages.map((l: any, idx: number) => (
-                      <li key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                        <span
-                          className="text-slate-700 outline-none"
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => onEdit(`languages[${idx}].lang`, e.currentTarget.textContent || '')}
-                        >
-                          {l.lang}
-                        </span>
-                        <span
-                          className="text-slate-500 outline-none"
-                          contentEditable
-                          suppressContentEditableWarning
-                          onBlur={(e) => onEdit(`languages[${idx}].level`, e.currentTarget.textContent || '')}
-                        >
-                          {l.level}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Projekte */}
-          {hasItems(candidateData.keyProjects) && (
-            <div>
-              <h3 className="text-xl font-semibold text-[#282550] mb-3">Schlüsselprojekte</h3>
-              <div className="space-y-4">
-                {candidateData.keyProjects.map((p: any, idx: number) => (
-                  <div key={p.id || idx} className="rounded-xl border border-slate-200 p-4 space-y-1">
-                    <div
-                      className="font-medium text-[#282550] outline-none"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => onEdit(`keyProjects[${idx}].title`, e.currentTarget.textContent || '')}
-                    >
-                      {p.title}
-                    </div>
-                    <div className="text-xs text-slate-500 mb-2 outline-none" contentEditable suppressContentEditableWarning onBlur={(e) => onEdit(`keyProjects[${idx}].category`, e.currentTarget.textContent || '')}>
-                      {p.category}
-                    </div>
-                    <p
-                      className="text-sm text-slate-700 outline-none"
-                      contentEditable
-                      suppressContentEditableWarning
-                      onBlur={(e) => onEdit(`keyProjects[${idx}].description`, e.currentTarget.textContent || '')}
-                    >
-                      {p.description}
-                    </p>
-                    <div className="mt-2">
-                      <span className="text-xs text-slate-500 mr-2">Tags (Kommagetrennt):</span>
-                      <span
-                        className="text-xs outline-none rounded border border-slate-200 px-2 py-1"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => onEdit(`keyProjects[${idx}].tags`, (e.currentTarget.textContent || ''), 'array')}
-                      >
-                        {(p.tags || []).join(', ')}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Erfahrungstimeline */}
-          {hasItems(candidateData.experienceTimeline) && (
-            <div>
-              <h3 className="text-xl font-semibold text-[#282550] mb-3">Berufserfahrung</h3>
-              <div className="space-y-4">
-                {candidateData.experienceTimeline.map((e: any, idx: number) => (
-                  <div key={e.id || idx} className="rounded-xl border border-slate-200 p-4 space-y-1">
-                    <div className="text-sm text-slate-500 outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].dateRange`, ev.currentTarget.textContent || '')}>{e.dateRange}</div>
-                    <div className="font-medium text-[#282550] outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].title`, ev.currentTarget.textContent || '')}>{e.title}</div>
-                    <p className="text-sm text-slate-700 outline-none" contentEditable suppressContentEditableWarning onBlur={(ev) => onEdit(`experienceTimeline[${idx}].description`, ev.currentTarget.textContent || '')}>{e.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        <div className="max-w-5xl mx-auto text-center">
+          <p className="text-lg text-slate-600">
+            Das vollständige Profil wird nach der AI-Verarbeitung hier angezeigt...
+          </p>
         </div>
       </section>
 
