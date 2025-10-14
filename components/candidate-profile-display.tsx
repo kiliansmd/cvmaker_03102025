@@ -102,6 +102,13 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
                   )}
                 </div>
               </div>
+              {/* CTAs */}
+              <div className="mt-4 flex items-center justify-center gap-3">
+                <a href="#" onClick={(e)=>{e.preventDefault(); window.print();}} className="px-4 py-2 rounded-[var(--radius)] bg-white/90 text-[rgb(var(--brand))] hover:bg-white ui-focus">Profil als PDF</a>
+                {candidateData.contactPerson?.email && (
+                  <a href={`mailto:${candidateData.contactPerson.email}`} className="px-4 py-2 rounded-[var(--radius)] border border-white/70 text-white hover:bg-white/10 ui-focus">Kontakt aufnehmen</a>
+                )}
+              </div>
             </div>
           </div>
         )}
