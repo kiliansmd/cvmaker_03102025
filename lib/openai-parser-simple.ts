@@ -20,6 +20,7 @@ export interface SimpleParsedCV {
     dateRange: string
   }>
   skills: {
+    /** Technische Skills im Format "Skill (Level)" mit Level ∈ {Experte, Sehr gut, Gut, Grundkenntnisse} */
     technical: string[]
     soft: string[]
     languages: Array<{ language: string; level: string }>
@@ -36,8 +37,8 @@ export async function parseWithSimpleJSON(cvText: string, additionalInfo?: strin
   const model = process.env.OPENAI_MODEL || "gpt-4o-mini"
 
   const systemPrompt = `Du bist ein Experte für CV-Parsing. 
-Extrahiere strukturierte Informationen aus Lebensläufen.
-Antworte NUR mit validem JSON im folgenden Format:
+Extrahiere ALLE relevanten Informationen vollständig und konsistent.
+Antworte NUR mit validem JSON im folgenden Format. Für technische Skills verwende das Format "Skill (Level)" mit Level ∈ {Experte, Sehr gut, Gut, Grundkenntnisse}. Für Sprachen nutze CEFR (z. B. C2, C1, B2).
 
 {
   "name": "Vollständiger Name",
@@ -63,9 +64,9 @@ Antworte NUR mit validem JSON im folgenden Format:
     }
   ],
   "skills": {
-    "technical": ["Skill1", "Skill2"],
-    "soft": ["Teamfähigkeit", "etc"],
-    "languages": [{"language": "Deutsch", "level": "Muttersprache"}]
+    "technical": ["Docker (Experte)", "Linux (Sehr gut)", "Kubernetes (Gut)"],
+    "soft": ["Teamfähigkeit", "Kommunikation"],
+    "languages": [{"language": "Deutsch", "level": "C2"}]
   },
   "certifications": ["Zertifikat 1", "Zertifikat 2"]
 }
@@ -119,14 +120,16 @@ function normalizeCV(raw: any): SimpleParsedCV {
         }))
       : [],
     education: Array.isArray(raw?.education)
-      ? raw.education.map((e: any) => ({
+      ? dedupe(raw.education.map((e: any) => ({
           degree: String(e?.degree || ""),
           institution: String(e?.institution || ""),
           dateRange: String(e?.dateRange || ""),
-        }))
+        })))
       : [],
     skills: {
-      technical: Array.isArray(raw?.skills?.technical) ? raw.skills.technical.map((s: any) => String(s)) : [],
+      technical: Array.isArray(raw?.skills?.technical)
+        ? raw.skills.technical.map((s: any) => String(s).replace(/\s+\(\)/g, "").trim())
+        : [],
       soft: Array.isArray(raw?.skills?.soft) ? raw.skills.soft.map((s: any) => String(s)) : [],
       languages: Array.isArray(raw?.skills?.languages)
         ? raw.skills.languages.map((l: any) => ({
@@ -137,5 +140,18 @@ function normalizeCV(raw: any): SimpleParsedCV {
     },
     certifications: Array.isArray(raw?.certifications) ? raw.certifications.map((c: any) => String(c)) : [],
   }
+}
+
+function dedupe<T extends { degree?: string; institution?: string; dateRange?: string }>(arr: T[]): T[] {
+  const seen = new Set<string>()
+  const out: T[] = []
+  for (const e of arr) {
+    const key = `${e.degree}|${e.institution}|${e.dateRange}`
+    if (!seen.has(key) && (e.degree || e.institution)) {
+      seen.add(key)
+      out.push(e)
+    }
+  }
+  return out
 }
 
