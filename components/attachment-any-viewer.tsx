@@ -27,6 +27,7 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const revokeUrlsRef = useRef<string[]>([])
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null)
 
   useEffect(() => {
     return () => {
@@ -58,22 +59,29 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
         if (cancelled) return
         // Fall 1: PDF → Seiten rendern → JPEGs
         if ((mimeType || file?.type || "").includes("pdf") || (src && src.toLowerCase().endsWith('.pdf'))) {
-          const uint8 = new Uint8Array(ab)
-          const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true })
-          const pdf = await loadingTask.promise
-          const out: string[] = []
-          for (let i = 1; i <= pdf.numPages; i++) {
-            const page = await pdf.getPage(i)
-            const viewport = page.getViewport({ scale: 1.5 })
-            const canvas = document.createElement('canvas')
-            canvas.width = viewport.width
-            canvas.height = viewport.height
-            const ctx = canvas.getContext('2d')!
-            await page.render({ canvasContext: ctx, viewport }).promise
-            out.push(canvas.toDataURL('image/jpeg', 0.92))
+          try {
+            const uint8 = new Uint8Array(ab)
+            const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true })
+            const pdf = await loadingTask.promise
+            const out: string[] = []
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i)
+              const viewport = page.getViewport({ scale: 1.5 })
+              const canvas = document.createElement('canvas')
+              canvas.width = viewport.width
+              canvas.height = viewport.height
+              const ctx = canvas.getContext('2d')!
+              await page.render({ canvasContext: ctx, viewport }).promise
+              out.push(canvas.toDataURL('image/jpeg', 0.92))
+            }
+            if (!cancelled) setImages(out)
+            return
+          } catch (e) {
+            // pdfjs konnte nicht rendern – Fallback auf eingebetteten Viewer
+            const url = src || (file ? URL.createObjectURL(file) : null)
+            if (url) setFallbackUrl(url)
+            throw e
           }
-          if (!cancelled) setImages(out)
-          return
         }
 
         // Fall 2: DOCX/DOC/TXT → HTML generieren → html2canvas Snapshot
@@ -139,7 +147,19 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
   }
 
   if (error) {
-    return (
+    return fallbackUrl ? (
+      <div className="space-y-3">
+        <div className="rounded-[var(--radius)] overflow-hidden border border-slate-200">
+          <object data={fallbackUrl} type="application/pdf" className="w-full h-[800px]">
+            <iframe src={fallbackUrl} className="w-full h-[800px] bg-white" title="PDF Preview" />
+          </object>
+        </div>
+        <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-[var(--radius)] text-yellow-900 text-sm">
+          <FileWarning className="mr-2 h-4 w-4" />
+          {error} – Fallback‑Darstellung aktiviert.
+        </div>
+      </div>
+    ) : (
       <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-[var(--radius)] text-red-800">
         <FileWarning className="mr-2 h-5 w-5" />
         {error}
