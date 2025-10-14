@@ -27,7 +27,11 @@ export default function AttachmentPdfViewer({ src }: Props) {
     let cancelled = false
     async function render() {
       try {
-        const loadingTask = pdfjsLib.getDocument({ url: src, useSystemFonts: true })
+        // Hole die Blob-Daten und übergebe Uint8Array statt URL (stabiler für pdfjs)
+        const res = await fetch(src)
+        const ab = await res.arrayBuffer()
+        const uint8 = new Uint8Array(ab)
+        const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true })
         const pdf = await loadingTask.promise
         if (cancelled) return
         setNumPages(pdf.numPages)
@@ -44,8 +48,13 @@ export default function AttachmentPdfViewer({ src }: Props) {
           canvas.height = viewport.height
           const ctx = canvas.getContext("2d")!
           await page.render({ canvasContext: ctx, viewport }).promise
-          canvas.className = "border border-slate-200 rounded-[var(--radius)] bg-white shadow-sm"
-          container.appendChild(canvas)
+          // Konvertiere jede Seite in ein JPEG und bette als <img> ein
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
+          const img = document.createElement('img')
+          img.src = dataUrl
+          img.alt = `PDF Seite ${i}`
+          img.className = "border border-slate-200 rounded-[var(--radius)] bg-white shadow-sm w-full h-auto"
+          container.appendChild(img)
         }
       } catch (e: any) {
         setError(e?.message || "PDF konnte nicht dargestellt werden")
