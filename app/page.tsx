@@ -57,6 +57,55 @@ export default function HomePage() {
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [additionalInfo, setAdditionalInfo] = useState("")
 
+  const buildClientFallbackProfile = (
+    name: string,
+    position: string,
+    location: string,
+    salary: string,
+    availability: string,
+    contactPerson: string,
+    contactPhone: string,
+    contactEmail: string,
+    attachments: any[] = []
+  ) => {
+    const initials = (name || "").split(" ").map((p) => p[0]).join("")
+    return {
+      title: position,
+      salaryExpectation: salary,
+      availability: `Verfügbar in ${availability}`,
+      location,
+      experienceYears: "< 1 Jahr",
+      initials,
+      contactPerson: {
+        name: contactPerson || "",
+        phone: contactPhone || "",
+        email: contactEmail || "",
+        website: "www.getexperts.io",
+      },
+      profileSummary: [
+        `Profil erstellt ohne AI-Parsing. Angaben basieren auf Formularfeldern.`,
+      ],
+      topSkills: [],
+      qualifications: [],
+      personalDetails: [
+        { label: "Verfügbarkeit", value: `Verfügbar in ${availability}` },
+        { label: "Gehaltsvorstellung", value: salary || "-" },
+        { label: "Standort", value: location || "-" },
+        { label: "Zielposition", value: position || "-" },
+      ],
+      itSkills: [],
+      languages: [],
+      education: [],
+      keyProjects: [],
+      experienceTimeline: [],
+      careerGoals: [],
+      interests: [],
+      personalityTraits: [],
+      motivationFactors: [],
+      attachments,
+    }
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
@@ -86,6 +135,7 @@ export default function HomePage() {
       // Client-seitige Validierung, um deaktivierten Button zu vermeiden
       if (!cvFile || !formData.name.trim() || !formData.position.trim() || !formData.location.trim()) {
         setError("Bitte wählen Sie eine Datei und füllen Sie Name, Zielposition und Standort aus.")
+        setIsGenerating(false)
         return
       }
       // Erstelle FormData für Server Action
@@ -106,7 +156,7 @@ export default function HomePage() {
       // Rufe Server Action auf
       const result = await processCVAction(formDataToSend)
 
-      if (result.success && result.data) {
+      if (result && typeof result === 'object' && 'success' in result && (result as any).success && (result as any).data) {
         console.log("✅ Profil erfolgreich erstellt!")
         // Anhang (Originaldokument) als Download-Link (nur in aktueller Session)
         let attachments: any[] = []
@@ -123,14 +173,34 @@ export default function HomePage() {
             },
           ]
         }
-        setGeneratedProfile({ ...result.data, attachments })
+        setGeneratedProfile({ ...(result as any).data, attachments })
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
       } else {
-        console.error("❌ Fehler:", result.error)
-        setError(result.error || "Ein Fehler ist aufgetreten")
+        // Fallback: Minimalprofil clientseitig erstellen
+        console.warn("⚠️ Unerwartete Antwort von Server Action – Fallback aktiv.", result)
+        let attachments: any[] = []
+        if (cvFile) {
+          const fileBuffer = await cvFile.arrayBuffer()
+          const blob = new Blob([fileBuffer], { type: cvFile.type || 'application/octet-stream' })
+          const url = URL.createObjectURL(blob)
+          attachments = [{ name: cvFile.name, type: cvFile.type, size: cvFile.size, url }]
+        }
+        const fallback = buildClientFallbackProfile(
+          formData.name,
+          formData.position,
+          formData.location,
+          formData.salary,
+          formData.availability,
+          formData.contactPerson,
+          formData.contactPhone,
+          formData.contactEmail,
+          attachments
+        )
+        setGeneratedProfile(fallback)
+        setError("Die AI-Antwort war nicht verwertbar – es wurde ein Basisprofil erstellt.")
       }
     } catch (err: any) {
       console.error("❌ Fehler bei der Profilerstellung:", err)
