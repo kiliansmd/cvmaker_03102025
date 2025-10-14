@@ -41,6 +41,15 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
 
   useEffect(() => {
     let cancelled = false
+    function abToDataUrl(ab: ArrayBuffer, mime = 'application/pdf'): string {
+      const bytes = new Uint8Array(ab)
+      let binary = ''
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)) as any)
+      }
+      return `data:${mime};base64,` + btoa(binary)
+    }
     async function toArrayBuffer(): Promise<ArrayBuffer> {
       if (file) return await file.arrayBuffer()
       if (src) {
@@ -78,7 +87,7 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
             return
           } catch (e) {
             // pdfjs konnte nicht rendern – Fallback auf eingebetteten Viewer
-            const url = src || (file ? URL.createObjectURL(file) : null)
+            const url = src || (file ? URL.createObjectURL(file) : abToDataUrl(ab))
             if (url) setFallbackUrl(url)
             throw e
           }
