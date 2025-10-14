@@ -102,12 +102,47 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
         )}
       </section>
 
-      {/* Weitere Sektionen würden hier folgen - identisch zum bestehenden Design */}
-      <section className="py-20 px-8 bg-white">
-        <div className="max-w-5xl mx-auto text-center">
-          <p className="text-lg text-slate-600">
-            Das vollständige Profil wird nach der AI-Verarbeitung hier angezeigt...
-          </p>
+      {/* Inhalt – Details / Skills / Sprachen */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Details */}
+          <div className="ui-card p-6">
+            <h2 className="ui-section-title text-xl mb-4">Details</h2>
+            <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
+              {(candidateData.personalDetails || []).map((row: any, idx: number) => (
+                <div key={idx} className="grid grid-cols-3 md:grid-cols-3 bg-white">
+                  <div className="col-span-1 px-4 py-3 text-slate-500">{row.label}</div>
+                  <div className="col-span-2 px-4 py-3">{row.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* IT-Skills */}
+          <div className="ui-card p-6">
+            <h2 className="ui-section-title text-xl mb-4">IT‑Skills</h2>
+            <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
+              {(candidateData.itSkills || []).map((s: any, idx: number) => (
+                <div key={idx} className="grid grid-cols-3 bg-white">
+                  <div className="col-span-2 px-4 py-3">{s.skill}</div>
+                  <div className="col-span-1 px-4 py-3 ui-muted">{s.level}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sprachen */}
+          <div className="ui-card p-6 lg:col-span-2">
+            <h2 className="ui-section-title text-xl mb-4">Sprachen</h2>
+            <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
+              {(candidateData.languages || []).map((l: any, idx: number) => (
+                <div key={idx} className="grid grid-cols-3 bg-white">
+                  <div className="col-span-2 px-4 py-3">{l.lang}</div>
+                  <div className="col-span-1 px-4 py-3 ui-muted">{l.level}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
