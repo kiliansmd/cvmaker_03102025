@@ -187,14 +187,24 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               {/* Höchster Abschluss */}
               <div>
                 <div className="ui-muted text-sm mb-1">Höchster Abschluss</div>
-                <div>{(candidateData.education || [])[0] || "–"}</div>
+                <div contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.education||[])]
+                  next[0] = e.currentTarget.textContent || ''
+                  onChange?.({ ...candidateData, education: next })
+                }}>{(candidateData.education || [])[0] || "–"}</div>
               </div>
               {/* Top Skills */}
               <div>
                 <div className="ui-muted text-sm mb-1">Top Skills</div>
                 <div className="flex flex-wrap gap-2">
                   {(candidateData.itSkills || []).slice(0,3).map((s: any, i: number) => (
-                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{s.skill}</span>
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                      if(!editable) return
+                      const next=[...(candidateData.itSkills||[])]
+                      next[i] = { ...next[i], skill: e.currentTarget.textContent }
+                      onChange?.({ ...candidateData, itSkills: next })
+                    }}>{s.skill}</span>
                   ))}
                 </div>
               </div>
@@ -203,7 +213,12 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                 <div className="ui-muted text-sm mb-1">Top Tools</div>
                 <div className="flex flex-wrap gap-2">
                   {(candidateData.topSkills || []).slice(0,3).map((t: any, i: number) => (
-                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{t.name}</span>
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                      if(!editable) return
+                      const next=[...(candidateData.topSkills||[])]
+                      next[i] = { ...next[i], name: e.currentTarget.textContent }
+                      onChange?.({ ...candidateData, topSkills: next })
+                    }}>{t.name}</span>
                   ))}
                 </div>
               </div>
@@ -212,7 +227,12 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                 <div className="ui-muted text-sm mb-1">Zertifikate</div>
                 <div className="flex flex-wrap gap-2">
                   {(candidateData.qualifications || []).slice(0,3).map((q: string, i: number) => (
-                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">{q}</span>
+                    <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                      if(!editable) return
+                      const next=[...(candidateData.qualifications||[])]
+                      next[i] = e.currentTarget.textContent || ''
+                      onChange?.({ ...candidateData, qualifications: next })
+                    }}>{q}</span>
                   ))}
                 </div>
               </div>

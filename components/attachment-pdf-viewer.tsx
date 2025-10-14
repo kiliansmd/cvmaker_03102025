@@ -23,6 +23,7 @@ export default function AttachmentPdfViewer({ src, file }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -66,6 +67,11 @@ export default function AttachmentPdfViewer({ src, file }: Props) {
         }
       } catch (e: any) {
         setError(e?.message || "PDF konnte nicht dargestellt werden")
+        // Fallback: systemeigener PDF-Viewer per iframe mit Blob-URL
+        try {
+          const url = src || (file ? URL.createObjectURL(file) : null)
+          if (url) setFallbackUrl(url)
+        } catch {}
       }
     }
     render()
@@ -74,8 +80,12 @@ export default function AttachmentPdfViewer({ src, file }: Props) {
     }
   }, [src])
 
-  if (error) {
-    return <div className="ui-muted text-sm">{error}</div>
+  if (error && fallbackUrl) {
+    return (
+      <div className="rounded-[var(--radius)] overflow-hidden border border-slate-200">
+        <iframe src={fallbackUrl} className="w-full h-[800px] bg-white" title="PDF Fallback" />
+      </div>
+    )
   }
 
   return <div ref={containerRef} className="space-y-4" aria-label={`PDF mit ${numPages || "?"} Seiten`} />
