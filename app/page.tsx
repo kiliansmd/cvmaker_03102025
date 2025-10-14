@@ -156,12 +156,12 @@ export default function HomePage() {
       <div className={`container mx-auto px-4 py-12 ${isGenerating ? 'hidden' : ''}`}>
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <div className="inline-block mb-6">
               <Image src="/getexperts-logo.png" alt="getexperts Logo" width={200} height={67} />
             </div>
-            <h1 className="text-4xl font-bold text-[#282550] mb-4">Kandidatenprofil Generator</h1>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <h1 className="text-4xl font-bold text-[rgb(var(--brand))] tracking-tight mb-3">Kandidatenprofil Generator</h1>
+            <p className="text-base text-slate-600 max-w-2xl mx-auto">
               Laden Sie einen Lebenslauf hoch und generieren Sie automatisch ein professionelles Kandidatenprofil im
               getexperts.io Design - powered by OpenAI GPT-4.
             </p>
@@ -179,11 +179,11 @@ export default function HomePage() {
           )}
 
           {/* Upload-Formular */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+          <div className="ui-card p-8">
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* CV Upload */}
               <div className="space-y-3">
-                <Label htmlFor="cv-upload" className="text-lg font-semibold text-[#282550]">
+                <Label htmlFor="cv-upload" className="ui-section-title text-lg">
                   Lebenslauf hochladen * (Empfohlen: DOCX)
                 </Label>
                 <div className="relative">
@@ -197,13 +197,13 @@ export default function HomePage() {
                   />
                   <label
                     htmlFor="cv-upload"
-                    className="flex items-center justify-center gap-3 p-8 border-2 border-dashed border-slate-300 rounded-xl hover:border-[#282550] hover:bg-slate-50 transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-3 p-8 border-2 border-dashed border-slate-300 rounded-[var(--radius)] hover:border-[rgb(var(--brand))] hover:bg-slate-50 transition-all cursor-pointer ui-focus"
                   >
                     {cvFile ? (
                       <>
-                        <FileText className="h-8 w-8 text-[#282550]" />
+                        <FileText className="h-8 w-8 text-[rgb(var(--brand))]" />
                         <div className="text-left">
-                          <p className="font-medium text-[#282550]">{cvFile.name}</p>
+                          <p className="font-medium text-[rgb(var(--brand))]">{cvFile.name}</p>
                           <p className="text-sm text-slate-500">{(cvFile.size / 1024).toFixed(2)} KB</p>
                         </div>
                       </>
@@ -220,12 +220,12 @@ export default function HomePage() {
                     )}
                   </label>
                 </div>
-                <p className="text-xs text-slate-500">💡 Tipp: DOCX-Dateien werden am zuverlässigsten verarbeitet</p>
+                <p className="text-xs ui-muted">💡 Tipp: DOCX-Dateien werden am zuverlässigsten verarbeitet</p>
               </div>
 
               {/* Kandidaten-Informationen */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-[#282550] flex items-center gap-2">
+                <h3 className="text-lg ui-section-title flex items-center gap-2">
                   <ChevronRight className="h-5 w-5" />
                   Kandidaten-Informationen
                 </h3>
@@ -354,7 +354,7 @@ export default function HomePage() {
                 <Button
                   type="submit"
                   disabled={isGenerating}
-                  className="w-full bg-[#282550] hover:bg-[#1a1a38] text-white py-6 text-lg font-semibold rounded-xl transition-all"
+                  className="w-full bg-[rgb(var(--brand))] hover:bg-[rgb(var(--brand-600))] text-white py-6 text-lg font-semibold rounded-[var(--radius)] transition-all ui-focus"
                 >
                   {isGenerating ? (
                     <>
