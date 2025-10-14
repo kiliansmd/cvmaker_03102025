@@ -257,6 +257,30 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             </div>
           </div>
         )}
+
+        {/* Anhänge */}
+        {Array.isArray(candidateData.attachments) && candidateData.attachments.length > 0 && (
+          <div className="max-w-6xl mx-auto mt-8">
+            <div className="ui-card p-6">
+              <h2 className="ui-section-title text-xl mb-4">Anhänge</h2>
+              <ul className="space-y-3">
+                {candidateData.attachments.map((f: any, idx: number) => (
+                  <li key={idx} className="flex items-center justify-between gap-4">
+                    <div className="truncate">
+                      <div className="font-medium truncate">{f.name}</div>
+                      <div className="ui-muted text-sm">{f.type || 'Datei'} • {(f.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    {f.url && (
+                      <a href={f.url} download className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50 ui-focus">
+                        Herunterladen
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
 
       <footer className="py-12 px-8 bg-gradient-to-br from-[#282550] to-[#1a1a38] text-white">

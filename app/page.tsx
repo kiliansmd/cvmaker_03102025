@@ -79,7 +79,18 @@ export default function HomePage() {
 
       if (result.success && result.data) {
         console.log("✅ Profil erfolgreich erstellt!")
-        setGeneratedProfile(result.data)
+        // Anhang (Originaldokument) als Download-Link (nur in aktueller Session)
+        const attachments = cvFile
+          ? [
+              {
+                name: cvFile.name,
+                type: cvFile.type,
+                size: cvFile.size,
+                url: URL.createObjectURL(cvFile),
+              },
+            ]
+          : []
+        setGeneratedProfile({ ...result.data, attachments })
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' })
