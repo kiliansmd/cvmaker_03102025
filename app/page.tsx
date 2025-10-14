@@ -248,7 +248,7 @@ export default function HomePage() {
     return (
       <div>
         <div className="fixed top-4 left-4 z-50 no-print flex flex-col gap-2">
-          <Button onClick={handleReset} variant="outline" className="bg-white shadow-lg">
+          <Button onClick={handleReset} variant="outline" className="shadow-lg bg-white text-[rgb(var(--brand))] border border-[rgb(var(--brand))] hover:bg-white/80 ui-focus">
             ← Neues Profil erstellen
           </Button>
           <Button onClick={() => setIsEditing((v) => !v)} className="bg-[rgb(var(--brand))] hover:bg-[rgb(var(--brand-600))] text-white">

@@ -24,6 +24,10 @@ export default function AttachmentPdfViewer({ src, file }: Props) {
   const [numPages, setNumPages] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null)
+  // Revoke Blob URLs on unmount
+  useEffect(()=>{
+    return () => { if (fallbackUrl?.startsWith('blob:')) { try { URL.revokeObjectURL(fallbackUrl) } catch {} } }
+  }, [fallbackUrl])
 
   useEffect(() => {
     let cancelled = false
@@ -82,8 +86,16 @@ export default function AttachmentPdfViewer({ src, file }: Props) {
 
   if (error && fallbackUrl) {
     return (
-      <div className="rounded-[var(--radius)] overflow-hidden border border-slate-200">
-        <iframe src={fallbackUrl} className="w-full h-[800px] bg-white" title="PDF Fallback" />
+      <div className="space-y-3">
+        <div className="rounded-[var(--radius)] overflow-hidden border border-slate-200">
+          <object data={fallbackUrl} type="application/pdf" className="w-full h-[800px]">
+            <iframe src={fallbackUrl} className="w-full h-[800px] bg-white" title="PDF Preview" />
+          </object>
+        </div>
+        <div className="flex gap-2">
+          <a href={fallbackUrl} target="_blank" rel="noopener" className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50">In neuem Tab öffnen</a>
+          <a href={fallbackUrl} download className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50">Download</a>
+        </div>
       </div>
     )
   }
