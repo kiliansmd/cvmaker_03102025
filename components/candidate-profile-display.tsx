@@ -228,10 +228,30 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               {(candidateData.personalDetails || []).map((row: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 md:grid-cols-3 bg-white">
                   <div className="col-span-1 px-4 py-3 text-slate-500">{row.label}</div>
-                  <div className="col-span-2 px-4 py-3">{row.value}</div>
+                <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.personalDetails||[])]
+                  next[idx] = { ...row, value: e.currentTarget.textContent }
+                  onChange?.({ ...candidateData, personalDetails: next })
+                }}>{row.value}</div>
                 </div>
               ))}
             </div>
+          {editable && (
+            <div className="mt-3 flex gap-2">
+              <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=>{
+                const next=[...(candidateData.personalDetails||[]), { label: 'Feld', value: '-' }]
+                onChange?.({ ...candidateData, personalDetails: next })
+              }}>+ Feld hinzufügen</button>
+              {(candidateData.personalDetails||[]).length>0 && (
+                <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                  const next=[...(candidateData.personalDetails||[])]
+                  next.pop()
+                  onChange?.({ ...candidateData, personalDetails: next })
+                }}>Letztes entfernen</button>
+              )}
+            </div>
+          )}
           </div>
 
           {/* Kernkompetenzen */}
@@ -240,11 +260,36 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.itSkills || []).map((s: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 bg-white">
-                  <div className="col-span-2 px-4 py-3">{s.skill}</div>
-                  <div className="col-span-1 px-4 py-3 ui-muted">{s.level}</div>
+                <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.itSkills||[])]
+                  next[idx] = { ...s, skill: e.currentTarget.textContent }
+                  onChange?.({ ...candidateData, itSkills: next })
+                }}>{s.skill}</div>
+                <div className="col-span-1 px-4 py-3 ui-muted" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.itSkills||[])]
+                  next[idx] = { ...s, level: e.currentTarget.textContent }
+                  onChange?.({ ...candidateData, itSkills: next })
+                }}>{s.level}</div>
                 </div>
               ))}
             </div>
+          {editable && (
+            <div className="mt-3 flex gap-2">
+              <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=>{
+                const next=[...(candidateData.itSkills||[]), { skill: 'Neue Kompetenz', level: 'Gute Kenntnisse' }]
+                onChange?.({ ...candidateData, itSkills: next })
+              }}>+ Kompetenz hinzufügen</button>
+              {(candidateData.itSkills||[]).length>0 && (
+                <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                  const next=[...(candidateData.itSkills||[])]
+                  next.pop()
+                  onChange?.({ ...candidateData, itSkills: next })
+                }}>Letzte entfernen</button>
+              )}
+            </div>
+          )}
           </div>
 
           {/* Sprachen */}
@@ -253,11 +298,36 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.languages || []).map((l: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 bg-white">
-                  <div className="col-span-2 px-4 py-3">{l.lang}</div>
-                  <div className="col-span-1 px-4 py-3 ui-muted">{l.level}</div>
+                <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.languages||[])]
+                  next[idx] = { ...l, lang: e.currentTarget.textContent }
+                  onChange?.({ ...candidateData, languages: next })
+                }}>{l.lang}</div>
+                <div className="col-span-1 px-4 py-3 ui-muted" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  if(!editable) return
+                  const next=[...(candidateData.languages||[])]
+                  next[idx] = { ...l, level: e.currentTarget.textContent }
+                  onChange?.({ ...candidateData, languages: next })
+                }}>{l.level}</div>
                 </div>
               ))}
             </div>
+          {editable && (
+            <div className="mt-3 flex gap-2">
+              <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=>{
+                const next=[...(candidateData.languages||[]), { lang: 'Sprache', level: 'B2' }]
+                onChange?.({ ...candidateData, languages: next })
+              }}>+ Sprache hinzufügen</button>
+              {(candidateData.languages||[]).length>0 && (
+                <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                  const next=[...(candidateData.languages||[])]
+                  next.pop()
+                  onChange?.({ ...candidateData, languages: next })
+                }}>Letzte entfernen</button>
+              )}
+            </div>
+          )}
           </div>
         </div>
 
@@ -284,6 +354,30 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                 </li>
               ))}
             </ul>
+            {editable && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50"
+                  onClick={() => onChange?.({ ...candidateData, profileSummary: [...(candidateData.profileSummary || []), 'Neuer Punkt'] })}
+                >
+                  + Punkt hinzufügen
+                </button>
+                {(candidateData.profileSummary || []).length > 0 && (
+                  <button
+                    type="button"
+                    className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50"
+                    onClick={() => {
+                      const next = [...(candidateData.profileSummary || [])]
+                      next.pop()
+                      onChange?.({ ...candidateData, profileSummary: next })
+                    }}
+                  >
+                    Letzten entfernen
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Wichtige Projekte */}
@@ -372,6 +466,17 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   </div>
                 ))}
               </div>
+              {editable && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
+                    onClick={() => onChange?.({ ...candidateData, keyProjects: [...(candidateData.keyProjects||[]), { id: `p_${Date.now()}`, title: 'Neues Projekt', category: 'Projekt', description: '', tags: [] }] })}
+                  >
+                    + Projekt hinzufügen
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -466,6 +571,21 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   </li>
                 ))}
               </ul>
+              {editable && (
+                <div className="mt-3 flex gap-2">
+                  <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={()=>{
+                    const next=[...(candidateData.education||[]), 'Neuer Abschluss']
+                    onChange?.({ ...candidateData, education: next })
+                  }}>+ Abschluss hinzufügen</button>
+                  {(candidateData.education||[]).length>0 && (
+                    <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={()=>{
+                      const next=[...(candidateData.education||[])]
+                      next.pop()
+                      onChange?.({ ...candidateData, education: next })
+                    }}>Letzten entfernen</button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -19,7 +19,10 @@ export default function HomePage() {
 
   const deepClone = (obj: any) => JSON.parse(JSON.stringify(obj))
   const applyProfile = (next: any) => {
-    setHistory((h) => ({ past: [...h.past, deepClone(generatedProfile)], future: [] }))
+    setHistory((h) => {
+      if (generatedProfile == null) return h
+      return { past: [...h.past, deepClone(generatedProfile)], future: [] }
+    })
     setGeneratedProfile(next)
   }
   const undo = () => {
@@ -167,10 +170,10 @@ export default function HomePage() {
           </Button>
           {isEditing && (
             <div className="flex gap-2">
-              <Button type="button" onClick={undo} className="bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50">
+              <Button type="button" onClick={undo} disabled={!history.past.length} className={`bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50 ${!history.past.length ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 Zurück
               </Button>
-              <Button type="button" onClick={redo} className="bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50">
+              <Button type="button" onClick={redo} disabled={!history.future.length} className={`bg-white text-[rgb(var(--brand))] border border-slate-200 hover:bg-slate-50 ${!history.future.length ? 'opacity-50 cursor-not-allowed' : ''}`}>
                 Vor
               </Button>
             </div>
