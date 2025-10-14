@@ -1,6 +1,7 @@
 "use client"
 import Image from "next/image"
 import { MapPin, Clock, Euro, Phone, Mail, Globe, Check, Briefcase } from "lucide-react"
+import AttachmentPdfViewer from "./attachment-pdf-viewer"
 
 interface CandidateProfileDisplayProps {
   profileData: any
@@ -282,21 +283,23 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
           <div className="max-w-6xl mx-auto mt-8">
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Anhänge</h2>
-              <ul className="space-y-3">
+              <div className="space-y-6">
                 {candidateData.attachments.map((f: any, idx: number) => (
-                  <li key={idx} className="flex items-center justify-between gap-4">
-                    <div className="truncate">
+                  <div key={idx}>
+                    <div className="flex items-center justify-between mb-3">
                       <div className="font-medium truncate">{f.name}</div>
                       <div className="ui-muted text-sm">{f.type || 'Datei'} • {(f.size / 1024).toFixed(1)} KB</div>
                     </div>
-                    {f.url && (
-                      <a href={f.url} download className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50 ui-focus">
-                        Herunterladen
-                      </a>
+                    {f.type?.includes('pdf') && f.url ? (
+                      <AttachmentPdfViewer src={f.url} />
+                    ) : (
+                      f.url && (
+                        <a href={f.url} download className="px-3 py-2 rounded-[var(--radius)] border border-slate-200 text-sm hover:bg-slate-50 ui-focus">Herunterladen</a>
+                      )
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           </div>
         )}
