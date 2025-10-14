@@ -14,6 +14,7 @@ import Image from "next/image"
 export default function HomePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedProfile, setGeneratedProfile] = useState<any>(null)
+  const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
@@ -132,12 +133,15 @@ export default function HomePage() {
   if (generatedProfile) {
     return (
       <div>
-        <div className="fixed top-4 left-4 z-50 no-print">
+        <div className="fixed top-4 left-4 z-50 no-print flex flex-col gap-2">
           <Button onClick={handleReset} variant="outline" className="bg-white shadow-lg">
             ← Neues Profil erstellen
           </Button>
+          <Button onClick={() => setIsEditing((v) => !v)} className="bg-[rgb(var(--brand))] hover:bg-[rgb(var(--brand-600))] text-white">
+            {isEditing ? 'Speichern' : 'Bearbeiten'}
+          </Button>
         </div>
-        <CandidateProfileDisplay profileData={generatedProfile} />
+        <CandidateProfileDisplay profileData={generatedProfile} editable={isEditing} onChange={setGeneratedProfile} />
       </div>
     )
   }

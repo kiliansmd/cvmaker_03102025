@@ -5,9 +5,11 @@ import AttachmentPdfViewer from "./attachment-pdf-viewer"
 
 interface CandidateProfileDisplayProps {
   profileData: any
+  editable?: boolean
+  onChange?: (next: any) => void
 }
 
-export default function CandidateProfileDisplay({ profileData }: CandidateProfileDisplayProps) {
+export default function CandidateProfileDisplay({ profileData, editable = false, onChange }: CandidateProfileDisplayProps) {
   const candidateData = profileData
 
   const hasItems = (arr: any[] | undefined) => arr && arr.length > 0
@@ -47,7 +49,14 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
           <div className="inline-block px-4 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-6 backdrop-blur-sm ring-1 ring-white/20">
             Professionelles Kandidatenprofil | getexperts.io
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight">{candidateData.title}</h1>
+          <h1
+            className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight"
+            contentEditable={editable}
+            suppressContentEditableWarning
+            onBlur={(e) => editable && onChange?.({ ...candidateData, title: e.currentTarget.textContent })}
+          >
+            {candidateData.title}
+          </h1>
           {(candidateData.salaryExpectation ||
             candidateData.availability ||
             candidateData.location ||
@@ -56,25 +65,53 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               {candidateData.salaryExpectation && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Euro className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">Gehalt: {candidateData.salaryExpectation}</span>
+                  <span
+                    className="text-lg"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => editable && onChange?.({ ...candidateData, salaryExpectation: e.currentTarget.textContent })}
+                  >
+                    Gehalt: {candidateData.salaryExpectation}
+                  </span>
                 </div>
               )}
               {candidateData.availability && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Clock className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">{candidateData.availability}</span>
+                  <span
+                    className="text-lg"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => editable && onChange?.({ ...candidateData, availability: e.currentTarget.textContent })}
+                  >
+                    {candidateData.availability}
+                  </span>
                 </div>
               )}
               {candidateData.location && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <MapPin className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">{candidateData.location}</span>
+                  <span
+                    className="text-lg"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => editable && onChange?.({ ...candidateData, location: e.currentTarget.textContent })}
+                  >
+                    {candidateData.location}
+                  </span>
                 </div>
               )}
               {candidateData.experienceYears && (
                 <div className="flex items-center gap-3 text-slate-100 backdrop-blur-sm bg-white/10 p-4 rounded-lg shadow-md">
                   <Briefcase className="h-6 w-6 text-slate-300" />
-                  <span className="text-lg">Erfahrung: {candidateData.experienceYears}</span>
+                  <span
+                    className="text-lg"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => editable && onChange?.({ ...candidateData, experienceYears: e.currentTarget.textContent })}
+                  >
+                    Erfahrung: {candidateData.experienceYears}
+                  </span>
                 </div>
               )}
             </div>
@@ -213,7 +250,20 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             <h2 className="ui-section-title text-xl mb-4">Kurzprofil</h2>
             <ul className="list-disc ml-5 space-y-2">
               {(candidateData.profileSummary || []).map((s: string, i: number) => (
-                <li key={i} className="leading-relaxed">{s}</li>
+                <li
+                  key={i}
+                  className="leading-relaxed"
+                  contentEditable={editable}
+                  suppressContentEditableWarning
+                  onBlur={(e) => {
+                    if (!editable) return
+                    const next = [...(candidateData.profileSummary || [])]
+                    next[i] = e.currentTarget.textContent || ''
+                    onChange?.({ ...candidateData, profileSummary: next })
+                  }}
+                >
+                  {s}
+                </li>
               ))}
             </ul>
           </div>
@@ -223,11 +273,47 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Schlüsselprojekte</h2>
               <div className="space-y-4">
-                {candidateData.keyProjects.slice(0, 4).map((p: any) => (
-                  <div key={p.id} className="rounded-[var(--radius)] border border-slate-200 p-4">
-                    <div className="font-medium">{p.title}</div>
-                    <div className="ui-muted text-sm mb-2">{p.category}</div>
-                    <p className="text-sm leading-relaxed">{p.description}</p>
+                {candidateData.keyProjects.slice(0, 4).map((p: any, idx: number) => (
+                  <div key={p.id || idx} className="rounded-[var(--radius)] border border-slate-200 p-4">
+                    <div
+                      className="font-medium"
+                      contentEditable={editable}
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        if (!editable) return
+                        const next = [...candidateData.keyProjects]
+                        next[idx] = { ...p, title: e.currentTarget.textContent }
+                        onChange?.({ ...candidateData, keyProjects: next })
+                      }}
+                    >
+                      {p.title}
+                    </div>
+                    <div
+                      className="ui-muted text-sm mb-2"
+                      contentEditable={editable}
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        if (!editable) return
+                        const next = [...candidateData.keyProjects]
+                        next[idx] = { ...p, category: e.currentTarget.textContent }
+                        onChange?.({ ...candidateData, keyProjects: next })
+                      }}
+                    >
+                      {p.category}
+                    </div>
+                    <p
+                      className="text-sm leading-relaxed"
+                      contentEditable={editable}
+                      suppressContentEditableWarning
+                      onBlur={(e) => {
+                        if (!editable) return
+                        const next = [...candidateData.keyProjects]
+                        next[idx] = { ...p, description: e.currentTarget.textContent }
+                        onChange?.({ ...candidateData, keyProjects: next })
+                      }}
+                    >
+                      {p.description}
+                    </p>
                     {Array.isArray(p.tags) && p.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {p.tags.slice(0, 4).map((t: string, idx: number) => (
@@ -250,12 +336,48 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Berufsetappen</h2>
               <div className="space-y-4">
-                {candidateData.experienceTimeline.map((e: any) => (
-                  <div key={e.id} className="grid grid-cols-12 gap-4">
-                    <div className="col-span-12 md:col-span-3 ui-muted text-sm">{e.dateRange}</div>
+                {candidateData.experienceTimeline.map((e: any, idx: number) => (
+                  <div key={e.id || idx} className="grid grid-cols-12 gap-4">
+                    <div
+                      className="col-span-12 md:col-span-3 ui-muted text-sm"
+                      contentEditable={editable}
+                      suppressContentEditableWarning
+                      onBlur={(ev) => {
+                        if (!editable) return
+                        const next = [...candidateData.experienceTimeline]
+                        next[idx] = { ...e, dateRange: ev.currentTarget.textContent }
+                        onChange?.({ ...candidateData, experienceTimeline: next })
+                      }}
+                    >
+                      {e.dateRange}
+                    </div>
                     <div className="col-span-12 md:col-span-9">
-                      <div className="font-medium">{e.title}</div>
-                      <p className="text-sm leading-relaxed">{e.description}</p>
+                      <div
+                        className="font-medium"
+                        contentEditable={editable}
+                        suppressContentEditableWarning
+                        onBlur={(ev) => {
+                          if (!editable) return
+                          const next = [...candidateData.experienceTimeline]
+                          next[idx] = { ...e, title: ev.currentTarget.textContent }
+                          onChange?.({ ...candidateData, experienceTimeline: next })
+                        }}
+                      >
+                        {e.title}
+                      </div>
+                      <p
+                        className="text-sm leading-relaxed"
+                        contentEditable={editable}
+                        suppressContentEditableWarning
+                        onBlur={(ev) => {
+                          if (!editable) return
+                          const next = [...candidateData.experienceTimeline]
+                          next[idx] = { ...e, description: ev.currentTarget.textContent }
+                          onChange?.({ ...candidateData, experienceTimeline: next })
+                        }}
+                      >
+                        {e.description}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -271,7 +393,20 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
               <h2 className="ui-section-title text-xl mb-4">Ausbildung</h2>
               <ul className="space-y-2">
                 {candidateData.education.map((ed: string, idx: number) => (
-                  <li key={idx} className="leading-relaxed">{ed}</li>
+                  <li
+                    key={idx}
+                    className="leading-relaxed"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      if (!editable) return
+                      const next = [...candidateData.education]
+                      next[idx] = e.currentTarget.textContent || ''
+                      onChange?.({ ...candidateData, education: next })
+                    }}
+                  >
+                    {ed}
+                  </li>
                 ))}
               </ul>
             </div>
