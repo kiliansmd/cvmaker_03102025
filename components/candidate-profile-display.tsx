@@ -2,6 +2,7 @@
 import Image from "next/image"
 import { MapPin, Clock, Euro, Phone, Mail, Globe, Check, Briefcase } from "lucide-react"
 import AttachmentPdfViewer from "./attachment-pdf-viewer"
+import { useRef, useState } from "react"
 
 interface CandidateProfileDisplayProps {
   profileData: any
@@ -11,6 +12,23 @@ interface CandidateProfileDisplayProps {
 
 export default function CandidateProfileDisplay({ profileData, editable = false, onChange }: CandidateProfileDisplayProps) {
   const candidateData = profileData
+  const sectionRefs = [useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null), useRef<HTMLDivElement|null>(null)]
+  const [sectionIndex, setSectionIndex] = useState(0)
+
+  const scrollToRel = (dir: number) => {
+    const next = Math.min(Math.max(sectionIndex + dir, 0), sectionRefs.length - 1)
+    setSectionIndex(next)
+    const el = sectionRefs[next].current
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  const moveItem = (arr: any[], from: number, to: number) => {
+    const copy = [...arr]
+    if (to < 0 || to >= copy.length) return copy
+    const [item] = copy.splice(from, 1)
+    copy.splice(to, 0, item)
+    return copy
+  }
 
   const hasItems = (arr: any[] | undefined) => arr && arr.length > 0
 
@@ -323,6 +341,34 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                         ))}
                       </div>
                     )}
+                    {editable && (
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          type="button"
+                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
+                          onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx - 1) })}
+                        >
+                          ↑ Nach oben
+                        </button>
+                        <button
+                          type="button"
+                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
+                          onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx + 1) })}
+                        >
+                          ↓ Nach unten
+                        </button>
+                        <button
+                          type="button"
+                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-rose-200 text-rose-600 hover:bg-rose-50"
+                          onClick={() => {
+                            const next = candidateData.keyProjects.filter((_: any, i: number) => i !== idx)
+                            onChange?.({ ...candidateData, keyProjects: next })
+                          }}
+                        >
+                          Entfernen
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -332,7 +378,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
 
         {/* Berufsetappen / Timeline */}
         {Array.isArray(candidateData.experienceTimeline) && candidateData.experienceTimeline.length > 0 && (
-          <div className="max-w-6xl mx-auto mt-8">
+          <div ref={sectionRefs[3]} className="max-w-6xl mx-auto mt-8">
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Berufsetappen</h2>
               <div className="space-y-4">
@@ -382,6 +428,17 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   </div>
                 ))}
               </div>
+              {editable && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
+                    onClick={() => onChange?.({ ...candidateData, experienceTimeline: [...candidateData.experienceTimeline, { id: `exp_${Date.now()}`, dateRange: '', title: '', description: '' }] })}
+                  >
+                    + Etappe hinzufügen
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -415,7 +472,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
 
         {/* Anhänge */}
         {Array.isArray(candidateData.attachments) && candidateData.attachments.length > 0 && (
-          <div className="max-w-6xl mx-auto mt-8">
+          <div ref={sectionRefs[7]} className="max-w-6xl mx-auto mt-8">
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Anhänge</h2>
               <div className="space-y-6">
