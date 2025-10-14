@@ -23,6 +23,8 @@
 
   --foreground-rgb: 15, 23, 42; /* slate-900 */
   --background-rgb: 248, 250, 252; /* slate-50 */
+  /* Einheitlicher Radius für Komponenten (wirkt über tailwind.config.ts) */
+  --radius: 12px;
 }
 
 /* Druckoptimierungen */

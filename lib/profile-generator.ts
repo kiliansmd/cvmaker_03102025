@@ -84,15 +84,11 @@ export function generateProfileFromParsedCV(
 
   // Generiere Profil-Zusammenfassung (3 Absätze)
   const profileSummary = [
-    `Erfahrene/r ${formData.position} mit ${parsedCV.experienceYears} umfassender Expertise. ${parsedCV.summary}`,
-    `Ausgewiesene/r Experte/Expertin mit praktischer Erfahrung in ${
-      (parsedCV.skills.technical || []).slice(0, 3).join(", ") || "relevanten Technologien"
-    } und weiteren Technologien. Umfassende Kenntnisse in ${
+    `${formData.position} mit ${parsedCV.experienceYears} relevanter Erfahrung. ${parsedCV.summary}`,
+    `Schwerpunkte: ${(parsedCV.skills.technical || []).slice(0, 3).join(", ") || "moderne Technologien"}. Projektpraxis u. a. bei ${
       parsedCV.experience?.[0]?.company || "führenden Unternehmen"
-    } mit Fokus auf ${parsedCV.experience?.[0]?.title || "technische Exzellenz"}.`,
-    `Zuverlässige/r Spezialist/in mit akademischem Hintergrund (${parsedCV.education?.[0]?.degree || "Hochschulabschluss"}) und über ${
-      parsedCV.experienceYears || "mehrere Jahre"
-    } praktischer Erfahrung. Expertise in strategischer Planung und der kontinuierlichen Optimierung komplexer Systeme.`,
+    } in der Rolle ${parsedCV.experience?.[0]?.title || "Technical Consultant"}.`,
+    `Arbeitsweise: analytisch, strukturiert und unternehmerisch. Ziel: messbare Ergebnisse und nachhaltige Lösungen in enger Zusammenarbeit mit Stakeholdern.`,
   ]
 
   // Generiere Top Skills (max 4)
