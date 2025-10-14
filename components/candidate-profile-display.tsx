@@ -15,10 +15,17 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
     <div className="min-h-screen bg-white font-sans" id="candidate-profile">
       {/* Cover Page */}
       <section className="relative h-screen flex flex-col items-center justify-center p-8 text-center overflow-hidden page-break-after">
-        {/* Dekorativer Hintergrund */}
+        {/* Dekorativer Hintergrund (mehr Tiefe, dezente Bewegung) */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.06),transparent_40%),radial-gradient(ellipse_at_bottom_right,rgba(255,255,255,0.04),transparent_40%)]" />
-          <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--brand))] to-[rgb(var(--brand-600))] opacity-95" />
+          {/* Grundverlauf */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[rgb(var(--brand))] to-[rgb(var(--brand-600))]" />
+          {/* radial light spots */}
+          <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.22),transparent_60%)] blur-2xl opacity-60" />
+          <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.35),transparent_60%)] blur-3xl opacity-50" />
+          {/* feines Grid */}
+          <div className="absolute inset-0 opacity-20 bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:44px_44px]" />
+          {/* weiche Vignette */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.25))]" />
         </div>
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('/interwoven-algorithms.png')] bg-no-repeat bg-cover"></div>
@@ -36,7 +43,7 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
         </div>
 
         <div className="max-w-4xl mx-auto z-10">
-          <div className="inline-block px-4 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-6 backdrop-blur-sm">
+          <div className="inline-block px-4 py-1 rounded-full bg-white/10 text-white text-sm font-medium mb-6 backdrop-blur-sm ring-1 ring-white/20">
             Professionelles Kandidatenprofil | getexperts.io
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-12 tracking-tight">{candidateData.title}</h1>
