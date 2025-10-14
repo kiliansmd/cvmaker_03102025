@@ -144,6 +144,78 @@ export default function CandidateProfileDisplay({ profileData }: CandidateProfil
             </div>
           </div>
         </div>
+
+        {/* Zusammenfassung & Projekte */}
+        <div className="max-w-6xl mx-auto mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Summary */}
+          <div className="ui-card p-6">
+            <h2 className="ui-section-title text-xl mb-4">Kurzprofil</h2>
+            <ul className="list-disc ml-5 space-y-2">
+              {(candidateData.profileSummary || []).map((s: string, i: number) => (
+                <li key={i} className="leading-relaxed">{s}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Wichtige Projekte */}
+          {Array.isArray(candidateData.keyProjects) && candidateData.keyProjects.length > 0 && (
+            <div className="ui-card p-6">
+              <h2 className="ui-section-title text-xl mb-4">Schlüsselprojekte</h2>
+              <div className="space-y-4">
+                {candidateData.keyProjects.slice(0, 4).map((p: any) => (
+                  <div key={p.id} className="rounded-[var(--radius)] border border-slate-200 p-4">
+                    <div className="font-medium">{p.title}</div>
+                    <div className="ui-muted text-sm mb-2">{p.category}</div>
+                    <p className="text-sm leading-relaxed">{p.description}</p>
+                    {Array.isArray(p.tags) && p.tags.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {p.tags.slice(0, 4).map((t: string, idx: number) => (
+                          <span key={idx} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">
+                            {t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Berufsetappen / Timeline */}
+        {Array.isArray(candidateData.experienceTimeline) && candidateData.experienceTimeline.length > 0 && (
+          <div className="max-w-6xl mx-auto mt-8">
+            <div className="ui-card p-6">
+              <h2 className="ui-section-title text-xl mb-4">Berufsetappen</h2>
+              <div className="space-y-4">
+                {candidateData.experienceTimeline.map((e: any) => (
+                  <div key={e.id} className="grid grid-cols-12 gap-4">
+                    <div className="col-span-12 md:col-span-3 ui-muted text-sm">{e.dateRange}</div>
+                    <div className="col-span-12 md:col-span-9">
+                      <div className="font-medium">{e.title}</div>
+                      <p className="text-sm leading-relaxed">{e.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ausbildung */}
+        {Array.isArray(candidateData.education) && candidateData.education.length > 0 && (
+          <div className="max-w-6xl mx-auto mt-8">
+            <div className="ui-card p-6">
+              <h2 className="ui-section-title text-xl mb-4">Ausbildung</h2>
+              <ul className="space-y-2">
+                {candidateData.education.map((ed: string, idx: number) => (
+                  <li key={idx} className="leading-relaxed">{ed}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </section>
 
       <footer className="py-12 px-8 bg-gradient-to-br from-[#282550] to-[#1a1a38] text-white">
