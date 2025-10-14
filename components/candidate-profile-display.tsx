@@ -227,8 +227,18 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.personalDetails || []).map((row: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 md:grid-cols-3 bg-white">
-                  <div className="col-span-1 px-4 py-3 text-slate-500">{row.label}</div>
-                <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
+                  <div
+                    className="col-span-1 px-4 py-3 text-slate-500"
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e)=>{
+                      if(!editable) return
+                      const next=[...(candidateData.personalDetails||[])]
+                      next[idx] = { ...row, label: e.currentTarget.textContent }
+                      onChange?.({ ...candidateData, personalDetails: next })
+                    }}
+                  >{row.label}</div>
+                  <div className="col-span-2 px-4 py-3" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                   if(!editable) return
                   const next=[...(candidateData.personalDetails||[])]
                   next[idx] = { ...row, value: e.currentTarget.textContent }
@@ -338,19 +348,38 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <h2 className="ui-section-title text-xl mb-4">Kurzprofil</h2>
             <ul className="list-disc ml-5 space-y-2">
               {(candidateData.profileSummary || []).map((s: string, i: number) => (
-                <li
-                  key={i}
-                  className="leading-relaxed"
-                  contentEditable={editable}
-                  suppressContentEditableWarning
-                  onBlur={(e) => {
-                    if (!editable) return
-                    const next = [...(candidateData.profileSummary || [])]
-                    next[i] = e.currentTarget.textContent || ''
-                    onChange?.({ ...candidateData, profileSummary: next })
-                  }}
-                >
-                  {s}
+                <li key={i} className="leading-relaxed">
+                  <span
+                    contentEditable={editable}
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      if (!editable) return
+                      const next = [...(candidateData.profileSummary || [])]
+                      next[i] = e.currentTarget.textContent || ''
+                      onChange?.({ ...candidateData, profileSummary: next })
+                    }}
+                  >
+                    {s}
+                  </span>
+                  {editable && (
+                    <span className="ml-3 inline-flex gap-1 align-middle">
+                      <button
+                        type="button"
+                        className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50"
+                        onClick={() => onChange?.({ ...candidateData, profileSummary: moveItem(candidateData.profileSummary, i, i - 1) })}
+                      >↑</button>
+                      <button
+                        type="button"
+                        className="px-2 py-0.5 text-[11px] rounded-full border border-slate-200 hover:bg-slate-50"
+                        onClick={() => onChange?.({ ...candidateData, profileSummary: moveItem(candidateData.profileSummary, i, i + 1) })}
+                      >↓</button>
+                      <button
+                        type="button"
+                        className="px-2 py-0.5 text-[11px] rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50"
+                        onClick={() => onChange?.({ ...candidateData, profileSummary: candidateData.profileSummary.filter((_: any, idx: number) => idx !== i) })}
+                      >Entfernen</button>
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -437,30 +466,9 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                     )}
                     {editable && (
                       <div className="mt-3 flex gap-2">
-                        <button
-                          type="button"
-                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
-                          onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx - 1) })}
-                        >
-                          ↑ Nach oben
-                        </button>
-                        <button
-                          type="button"
-                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-slate-200 hover:bg-slate-50"
-                          onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx + 1) })}
-                        >
-                          ↓ Nach unten
-                        </button>
-                        <button
-                          type="button"
-                          className="px-3 py-1 text-xs rounded-[var(--radius)] border border-rose-200 text-rose-600 hover:bg-rose-50"
-                          onClick={() => {
-                            const next = candidateData.keyProjects.filter((_: any, i: number) => i !== idx)
-                            onChange?.({ ...candidateData, keyProjects: next })
-                          }}
-                        >
-                          Entfernen
-                        </button>
+                        <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx - 1) })}>↑</button>
+                        <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={() => onChange?.({ ...candidateData, keyProjects: moveItem(candidateData.keyProjects, idx, idx + 1) })}>↓</button>
+                        <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => { const next = candidateData.keyProjects.filter((_: any, i: number) => i !== idx); onChange?.({ ...candidateData, keyProjects: next }) }}>Entfernen</button>
                       </div>
                     )}
                   </div>
@@ -529,6 +537,13 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       >
                         {e.description}
                       </p>
+                      {editable && (
+                        <div className="mt-2 flex gap-2">
+                          <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={() => onChange?.({ ...candidateData, experienceTimeline: moveItem(candidateData.experienceTimeline, idx, idx - 1) })}>↑</button>
+                          <button type="button" className="px-3 py-1 text-xs rounded-full border border-slate-200 hover:bg-slate-50" onClick={() => onChange?.({ ...candidateData, experienceTimeline: moveItem(candidateData.experienceTimeline, idx, idx + 1) })}>↓</button>
+                          <button type="button" className="px-3 py-1 text-xs rounded-full border border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => { const next = candidateData.experienceTimeline.filter((_: any, i: number) => i !== idx); onChange?.({ ...candidateData, experienceTimeline: next }) }}>Entfernen</button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
