@@ -8,7 +8,7 @@ Ein automatisierter CV-Parser und Profil-Generator powered by OpenAI GPT-4, der 
 - 🤖 **AI-gestützte Extraktion** von Skills, Erfahrung, Ausbildung
 - 🎨 **Professionelles Design** im getexperts.io Brand
 - 📱 **Responsive** für alle Geräte
-- 📥 **PDF-Export** des generierten Profils
+- 📥 **PDF-Export** des generierten Profils (Server-API + Client-Fallback)
 - 🔄 **Multiple Dateiformate**: DOCX (empfohlen), PDF, TXT
 
 ## 🚀 Quick Start
@@ -46,7 +46,7 @@ Ein automatisierter CV-Parser und Profil-Generator powered by OpenAI GPT-4, der 
    http://localhost:3000
    \`\`\`
 
-## 🌐 Deployment auf Railway (robust)
+## 🌐 Deployment auf Railway
 
 ### Schnellstart
 
@@ -79,16 +79,17 @@ Ein automatisierter CV-Parser und Profil-Generator powered by OpenAI GPT-4, der 
 ### Railway Settings
 
 **Build Command**: `pnpm run build`  
-**Start Command**: `pnpm start` (Standalone: `node .next/standalone/server.js`)  
+**Start Command**: `HOST=0.0.0.0 HOSTNAME=0.0.0.0 node .next/standalone/server.js`  
 **Node Version**: 18.x oder höher
-**Healthcheck**: `/api/health`
 
-### Stabilitätsprinzipien
+### PDF Export (Production)
+- Server-Route: `POST /api/render-pdf` rendert eine einzelne lange Seite (Breite 1400px), mit Hintergründen, randlos. In Container-Umgebungen mit Headless‑Chrome.  
+- Env (optional): `PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium` (Railway/Nixpacks)  
+- Fallback: Clientseitig wird bei Fehlern html2canvas + jsPDF genutzt (vollständige Seite), sodass der Download garantiert ist.
 
-- DOCX‑first (mammoth), PDF als Fallback (pdfjs‑dist legacy, Uint8Array, kein Worker)
-- OpenAI JSON‑Mode (`response_format: json_object`) – keine strict Schemas
-- Serverdaten enthalten keine React‑Komponenten (Icons werden im Server zu `null` gesetzt)
-- `next.config.mjs`: `output: 'standalone'` + Aliases `canvas=false`, `encoding=false`
+### Attachments
+- Hochgeladene Dokumente (PDF, DOCX, TXT, Bilder) werden im Profil als Bilder gerendert (PDF seitenweise).  
+- Dadurch sind alle Seiten im PDF‑Export sichtbar.
 
 ## 📋 Verwendung
 
@@ -115,8 +116,8 @@ Ein automatisierter CV-Parser und Profil-Generator powered by OpenAI GPT-4, der 
 
 - **Frontend**: Next.js 14, React 19, TypeScript
 - **Styling**: Tailwind CSS, shadcn/ui
-- **AI**: OpenAI (JSON‑Mode)
-- **File Processing**: mammoth (DOCX), pdfjs‑dist (PDF)
+- **AI**: OpenAI GPT-4o
+- **File Processing**: pdf-parse, mammoth
 - **PDF Export**: jsPDF, html2canvas
 
 ## 📁 Projekt-Struktur
@@ -141,20 +142,20 @@ Ein automatisierter CV-Parser und Profil-Generator powered by OpenAI GPT-4, der 
 ## 🔧 Konfiguration
 
 ### OpenAI API
-- Modell Default: `gpt-4o-mini` (schnell & stabil)
-- JSON‑Mode (`response_format: json_object`)
-- Temperature: 0.2
+- Modell: `gpt-4o-2024-08-06`
+- Structured Output für präzises Parsing
+- Temperature: 0.1 (hohe Präzision)
 
-### Datei‑Verarbeitung
+### Datei-Verarbeitung
 - **DOCX**: Mammoth (empfohlen)
-- **PDF**: pdfjs‑dist legacy (Uint8Array, no worker)
+- **PDF**: pdf-parse (mit Fallback)
 - **TXT**: Direktes Lesen
 
 ## 🐛 Troubleshooting
 
-### PDF‑Parsing Fehler
-- **Problem**: `Please provide binary data as Uint8Array`
-- **Lösung**: Ist gefixt (intern Uint8Array). Empfehlung bleibt: DOCX verwenden
+### PDF-Parsing Fehler
+- **Problem**: `ENOENT: no such file or directory`
+- **Lösung**: Nutze DOCX-Dateien (zuverlässiger)
 
 ### OpenAI Rate Limits
 - **Problem**: Zu viele Requests
