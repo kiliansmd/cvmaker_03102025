@@ -175,10 +175,24 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   onClick={async (e) => {
                     e.preventDefault()
                     try {
+                      const container = document.getElementById('candidate-profile')
+                      if (!container) throw new Error('Profil nicht gefunden')
+                      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+                        .map((l) => (l as HTMLLinkElement).href)
+                      const headLinks = styles
+                        .map((href) => `<link rel="stylesheet" href="${href}" />`)
+                        .join('')
+                      const html = `<!DOCTYPE html><html><head><meta charset=\"utf-8\" />${headLinks}<style>
+                        @page{ size: 1400px auto; margin:0 }
+                        html,body{ margin:0; padding:0; background:white; }
+                        .wrap{ width:1400px; margin:0 auto; }
+                        *{-webkit-print-color-adjust: exact; print-color-adjust: exact}
+                      </style></head><body><div class=\"wrap\">${container.outerHTML}</div></body></html>`
+
                       const res = await fetch('/api/render-pdf', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: window.location.href, width: 1400 })
+                        body: JSON.stringify({ html, width: 1400 })
                       })
                       if (!res.ok) throw new Error('PDF konnte nicht erzeugt werden')
                       const blob = await res.blob()
