@@ -30,6 +30,7 @@ export async function POST(req: Request) {
     }
 
     // Headless Browser starten
+    const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath?.()) || undefined
     const browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -37,8 +38,10 @@ export async function POST(req: Request) {
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
+        "--font-render-hinting=none",
+        "--hide-scrollbars",
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      executablePath: execPath,
     })
 
     try {

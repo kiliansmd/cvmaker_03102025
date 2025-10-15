@@ -204,9 +204,10 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       a.click()
                       a.remove()
                       URL.revokeObjectURL(url)
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('PDF Export Fehler', err)
-                      alert('PDF Export fehlgeschlagen. Bitte später erneut versuchen.')
+                      const msg = err?.message || 'Unbekannter Fehler'
+                      alert(`PDF Export fehlgeschlagen: ${msg}`)
                     }
                   }}
                   className="px-4 py-2 rounded-[var(--radius)] bg-white/90 text-[rgb(var(--brand))] hover:bg-white ui-focus"
