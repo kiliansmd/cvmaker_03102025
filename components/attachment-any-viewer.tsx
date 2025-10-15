@@ -55,6 +55,18 @@ export default function AttachmentAnyViewer({ src, file, fileName, mimeType }: P
       setError(null)
       setImages([])
       try {
+        // Direkt Bilddatei? Dann direkt anzeigen (auch für data:image/* URLs)
+        const lowerSrc = (src || '').toLowerCase()
+        const extIsImage = /(\.jpg|\.jpeg|\.png|\.webp|\.gif)$/i.test(lowerSrc)
+        const typeIsImage = (mimeType || file?.type || '').startsWith('image/')
+        const dataIsImage = lowerSrc.startsWith('data:image/')
+        if (typeIsImage || dataIsImage || extIsImage) {
+          let imgUrl = src || ''
+          if (!imgUrl && file) imgUrl = URL.createObjectURL(file)
+          if (!imgUrl) throw new Error('Kein Bild verfügbar')
+          if (!cancelled) setImages([imgUrl])
+          return
+        }
         const ab = await toArrayBuffer()
         if (cancelled) return
         // Fall 1: PDF → Seiten rendern → JPEGs
