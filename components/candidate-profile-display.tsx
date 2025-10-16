@@ -52,9 +52,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
           {/* weiche Vignette */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.25))]" />
         </div>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('/interwoven-algorithms.png')] bg-no-repeat bg-cover"></div>
-        </div>
+        {/* Hintergrundbild entfernt - nur dunkelblauer Verlauf */}
 
         <div className="absolute top-8 left-8 z-10">
           <Image src="/getexperts-logo.png" alt="getexperts Logo" width={240} height={80} className="mb-8" />
@@ -177,29 +175,66 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                     try {
                       const container = document.getElementById('candidate-profile')
                       if (!container) throw new Error('Profil nicht gefunden')
+                      
+                      // Sammle alle Styles (inline + externe)
                       const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
                         .map((l) => (l as HTMLLinkElement).href)
+                      
+                      // Sammle auch alle Style-Tags
+                      const styleTags = Array.from(document.querySelectorAll('style'))
+                        .map(s => s.innerHTML)
+                        .join('\n')
+                      
                       const headLinks = styles
                         .map((href) => `<link rel="stylesheet" href="${href}" />`)
                         .join('')
-                      const html = `<!DOCTYPE html><html><head><meta charset=\"utf-8\" />${headLinks}<style>
-                        @page{ size: 1400px auto; margin:0 }
-                        html,body{ margin:0; padding:0; background:white; }
-                        .wrap{ width:1400px; margin:0 auto; }
-                        #candidate-profile{ width:1400px; margin:0 auto; }
-                        *{-webkit-print-color-adjust: exact; print-color-adjust: exact}
-                      </style></head><body><div class=\"wrap\">${container.outerHTML}</div></body></html>`
+                      
+                      const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1400" />
+  ${headLinks}
+  <style>
+    @page { size: 1400px auto; margin: 0; }
+    html, body { 
+      margin: 0; 
+      padding: 0; 
+      background: white; 
+      width: 1400px;
+      overflow-x: hidden;
+    }
+    .wrap { width: 1400px; margin: 0 auto; }
+    #candidate-profile { width: 1400px; margin: 0 auto; }
+    * { 
+      -webkit-print-color-adjust: exact; 
+      print-color-adjust: exact;
+      color-adjust: exact;
+    }
+    .no-print { display: none !important; }
+    ${styleTags}
+  </style>
+</head>
+<body>
+  <div class="wrap">${container.outerHTML}</div>
+</body>
+</html>`
 
                       const res = await fetch('/api/render-pdf', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ html, width: 1400 })
                       })
+                      
                       if (!res.ok) {
                         let info = ''
-                        try { const j = await res.json(); info = j?.error || '' } catch {}
+                        try { 
+                          const j = await res.json()
+                          info = j?.error || '' 
+                        } catch {}
                         throw new Error(info || 'PDF konnte nicht erzeugt werden')
                       }
+                      
                       const blob = await res.blob()
                       const url = URL.createObjectURL(blob)
                       const a = document.createElement('a')
@@ -209,23 +244,42 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       a.click()
                       a.remove()
                       URL.revokeObjectURL(url)
+                      
+                      console.log('✅ PDF erfolgreich heruntergeladen')
                     } catch (err: any) {
                       console.warn('Server-PDF fehlgeschlagen, wechsle auf Client-Fallback', err)
+                      
                       // Client-Fallback: HTML -> Canvas -> PDF
                       try {
                         const container = document.getElementById('candidate-profile')
                         if (!container) throw new Error('Profil nicht gefunden')
+                        
                         const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
                           import('html2canvas'),
                           import('jspdf') as any,
                         ])
-                        const canvas = await html2canvas(container as HTMLElement, { backgroundColor: '#ffffff', scale: 2 })
-                        const img = canvas.toDataURL('image/jpeg', 0.92)
-                        const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] })
+                        
+                        const canvas = await html2canvas(container as HTMLElement, { 
+                          backgroundColor: '#ffffff', 
+                          scale: 2,
+                          useCORS: true,
+                          allowTaint: true,
+                          logging: false,
+                          width: 1400,
+                        })
+                        
+                        const img = canvas.toDataURL('image/jpeg', 0.95)
+                        const pdf = new jsPDF({ 
+                          unit: 'px', 
+                          format: [canvas.width, canvas.height],
+                          compress: true,
+                        })
                         pdf.addImage(img, 'JPEG', 0, 0, canvas.width, canvas.height)
                         pdf.save(`${(candidateData?.title || 'profil').replace(/\s+/g,'_')}.pdf`)
+                        
+                        console.log('✅ PDF erfolgreich generiert via Client-Fallback')
                       } catch (fallbackErr: any) {
-                        console.error('PDF Fallback Fehler', fallbackErr)
+                        console.error('❌ PDF Fallback Fehler', fallbackErr)
                         const msg = fallbackErr?.message || 'Unbekannter Fehler'
                         alert(`PDF Export fehlgeschlagen: ${msg}`)
                       }

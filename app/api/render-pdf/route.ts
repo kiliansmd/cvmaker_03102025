@@ -57,13 +57,33 @@ export async function POST(req: Request) {
         await page.setContent(String(html), { waitUntil: "networkidle0" })
       }
 
+      // Warte bis alle Ressourcen geladen sind
+      await page.waitForSelector('#candidate-profile', { timeout: 10000 })
+      await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 1000)))
+
       // CSS injizieren: keine Ränder/Seitenumbrüche, Hintergründe an
       await page.addStyleTag({
         content: `
           @page { size: ${targetWidth}px auto; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; width: ${targetWidth}px !important; }
-          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .page-break, .page-break-before, .page-break-after { break-before: avoid !important; break-after: avoid !important; page-break-before: avoid !important; page-break-after: avoid !important; }
+          html, body { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: ${targetWidth}px !important; 
+            overflow-x: hidden !important;
+          }
+          * { 
+            -webkit-print-color-adjust: exact !important; 
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          .page-break, .page-break-before, .page-break-after { 
+            break-before: avoid !important; 
+            break-after: avoid !important; 
+            page-break-before: avoid !important; 
+            page-break-after: avoid !important; 
+          }
+          .no-print { display: none !important; }
+          #candidate-profile { width: ${targetWidth}px !important; }
         `,
       })
 
@@ -87,6 +107,7 @@ export async function POST(req: Request) {
 
       let buffer: Buffer
       try {
+        // Versuche zuerst PDF-Rendering
         const pdfBuffer: Uint8Array = await page.pdf({
           printBackground: true,
           width: `${targetWidth}px`,
@@ -96,19 +117,33 @@ export async function POST(req: Request) {
           pageRanges: "1",
           displayHeaderFooter: false,
           landscape: false,
+          scale: 1.0, // Volle Qualität
         })
         buffer = Buffer.from(pdfBuffer)
-      } catch (e) {
-        // Fallback: PNG Screenshot -> PDF einbetten (dynamischer Import)
-        const png = await page.screenshot({ type: 'png', fullPage: true }) as Buffer
-        const { PDFDocument, rgb }: any = await import('pdf-lib')
+        console.log('✅ PDF erfolgreich generiert via Puppeteer')
+      } catch (pdfError) {
+        console.warn('⚠️ PDF-Generierung fehlgeschlagen, nutze Screenshot-Fallback:', pdfError)
+        
+        // Fallback: High-Quality Screenshot -> PDF einbetten
+        const png = await page.screenshot({ 
+          type: 'png', 
+          fullPage: true,
+          omitBackground: false,
+        }) as Buffer
+        
+        const { PDFDocument }: any = await import('pdf-lib')
         const pdfDoc = await PDFDocument.create()
         const page1 = pdfDoc.addPage([targetWidth, usedHeight])
         const pngEmbed = await pdfDoc.embedPng(png)
-        page1.drawRectangle({ x: 0, y: 0, width: targetWidth, height: usedHeight, color: rgb(1,1,1) })
-        page1.drawImage(pngEmbed, { x: 0, y: 0, width: targetWidth, height: usedHeight })
+        page1.drawImage(pngEmbed, { 
+          x: 0, 
+          y: 0, 
+          width: targetWidth, 
+          height: usedHeight 
+        })
         const out = await pdfDoc.save()
         buffer = Buffer.from(out)
+        console.log('✅ PDF erfolgreich generiert via Screenshot-Fallback')
       }
 
       const stream = new ReadableStream({
