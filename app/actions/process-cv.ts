@@ -2,108 +2,104 @@
 
 import { extractTextFromFile } from "@/lib/file-extractor"
 import { parseCVWithAI } from "@/lib/cv-parser"
-import type { ParsedCV } from "@/lib/cv-parser"
 import { generateProfileFromParsedCV } from "@/lib/profile-generator"
+import { validateFileOrThrow } from "@/lib/file-validator"
+import { CVUploadFormSchema, type ParsedCV, type CandidateProfile } from "@/lib/schemas"
+import { AppError, ErrorCode, getUserFriendlyErrorMessage } from "@/lib/errors"
 
-export async function processCVAction(formData: FormData) {
+export interface ProcessCVResult {
+  success: boolean
+  data?: CandidateProfile
+  error?: string
+  code?: string
+}
+
+export async function processCVAction(formData: FormData): Promise<ProcessCVResult> {
   try {
-    // 1. Extrahiere Datei und Form-Daten
-    const file = formData.get("cvFile") as File
-    const name = formData.get("name") as string
-    const position = formData.get("position") as string
-    const location = formData.get("location") as string
-    const salary = formData.get("salary") as string
-    const availability = formData.get("availability") as string
-    const contactPerson = formData.get("contactPerson") as string
-    const contactPhone = formData.get("contactPhone") as string
-    const contactEmail = formData.get("contactEmail") as string
-    const additionalInfo = formData.get("additionalInfo") as string
-
-    if (!file || !name || !position || !location) {
-      return {
-        success: false,
-        error: "Erforderliche Felder fehlen: Name, Position und Standort sind Pflichtfelder.",
-      }
+    // 1. Extrahiere und validiere Form-Daten
+    const file = formData.get("cvFile") as File | null
+    const rawFormData = {
+      name: formData.get("name") as string,
+      position: formData.get("position") as string,
+      location: formData.get("location") as string,
+      salary: formData.get("salary") as string,
+      availability: formData.get("availability") as string,
+      contactPerson: formData.get("contactPerson") as string,
+      contactPhone: formData.get("contactPhone") as string,
+      contactEmail: formData.get("contactEmail") as string,
+      additionalInfo: formData.get("additionalInfo") as string,
     }
 
-    console.log("📄 Starte CV-Verarbeitung für:", name)
+    // Validiere mit Zod (wirft bei Fehler)
+    const validatedData = CVUploadFormSchema.parse({
+      ...rawFormData,
+      cvFile: file || undefined,
+    })
+
+    if (!file) {
+      throw new AppError(
+        ErrorCode.MISSING_REQUIRED_FIELD,
+        "Bitte laden Sie eine CV-Datei hoch.",
+        400
+      )
+    }
+
+    console.log("📄 Starte CV-Verarbeitung für:", validatedData.name)
     console.log("📎 Datei:", file.name, "Typ:", file.type, "Größe:", file.size)
 
-    // 2. Extrahiere Text aus der Datei
+    // 2. Server-side File-Validierung (Magic Bytes, Größe, etc.)
+    console.log("🔒 Validiere Datei...")
+    await validateFileOrThrow(file)
+    console.log("✅ Datei-Validierung erfolgreich")
+
+    // 3. Extrahiere Text aus der Datei
     console.log("🔍 Extrahiere Text aus Datei...")
-    let cvText: string = ""
+    let cvText = ""
 
     try {
       cvText = await extractTextFromFile(file)
       console.log("✅ Text extrahiert. Länge:", cvText.length, "Zeichen")
     } catch (extractError: any) {
       console.error("❌ Fehler bei Text-Extraktion:", extractError)
-      // Kein Hard-Error mehr: Wir fahren mit Minimalprofil-Fallback fort
-      cvText = ""
+      
+      // Wenn Extraktion fehlschlägt: Versuche Minimalprofil
+      if (cvText.trim().length < 50) {
+        console.warn("⚠️ Text zu kurz oder Extraktion fehlgeschlagen - erstelle Basisprofil")
+      }
     }
 
-    const hasSomeText = !!cvText && cvText.trim().length >= 10
-
-    // 3. Parse CV mit OpenAI
-    console.log("🤖 Parse CV mit OpenAI GPT-4...")
+    // 4. Parse CV mit OpenAI (mit Retry-Logic)
     let parsedCV: ParsedCV | null = null
+    const hasSufficientText = cvText.trim().length >= 50
 
-    try {
-      if (hasSomeText) {
-        parsedCV = await parseCVWithAI(cvText, additionalInfo)
+    if (hasSufficientText) {
+      console.log("🤖 Parse CV mit OpenAI...")
+      try {
+        parsedCV = await parseCVWithAI(cvText, validatedData.additionalInfo)
         console.log("✅ CV erfolgreich geparst")
+      } catch (parseError: any) {
+        console.error("❌ OpenAI Parsing-Fehler:", parseError)
+        
+        // Bei OpenAI-Fehler: Informiere User aber fahre mit Basisprofil fort
+        const errorMessage = getUserFriendlyErrorMessage(parseError)
+        console.warn(`⚠️ Fallback: ${errorMessage}`)
       }
-    } catch (parseError: any) {
-      console.error("❌ OpenAI Parsing-Fehler:", parseError)
-      const message = String(parseError?.message || parseError)
-      const hint = message.includes("OPENAI_API_KEY")
-        ? " Bitte setzen Sie OPENAI_API_KEY (.env.local/Railway)."
-        : ""
-      // Fallback: Minimalprofil generieren
-      console.warn("⚠️ Fallback: Generiere Minimalprofil ohne AI-Parsing.")
     }
 
-    // Wenn Parsing nicht möglich war oder Text zu kurz: Minimalprofil auf Basis der Formdaten erzeugen
+    // 5. Fallback: Erstelle Minimalprofil aus Formdaten
     if (!parsedCV) {
-      parsedCV = {
-        personalInfo: {
-          name,
-          location,
-          email: undefined,
-          phone: undefined,
-        } as any,
-        experience: [],
-        education: [],
-        skills: {
-          technical: [],
-          soft: [],
-          languages: [],
-        },
-        certifications: [],
-        projects: [],
-        summary: "Zusammenfassung konnte nicht automatisch extrahiert werden.",
-        experienceYears: "< 1 Jahr",
-      }
+      parsedCV = createFallbackProfile(validatedData)
     }
 
-    // Normalisierung: Stelle Pflichtstrukturen sicher
-    parsedCV.personalInfo = parsedCV.personalInfo || ({} as any)
-    if (!parsedCV.personalInfo.location) parsedCV.personalInfo.location = location
-    if (!parsedCV.personalInfo.name) parsedCV.personalInfo.name = name
-    parsedCV.experience = parsedCV.experience || []
-    parsedCV.education = parsedCV.education || []
-    parsedCV.certifications = parsedCV.certifications || []
-    parsedCV.skills = parsedCV.skills || ({ technical: [], soft: [], languages: [] } as any)
-
-    // 4. Generiere Profil-Daten
+    // 6. Generiere finales Kandidaten-Profil
     console.log("📋 Generiere Profil-Daten...")
     const profileData = generateProfileFromParsedCV(parsedCV, {
-      position,
-      salary,
-      availability,
-      contactPerson,
-      contactPhone,
-      contactEmail,
+      position: validatedData.position,
+      salary: validatedData.salary,
+      availability: validatedData.availability,
+      contactPerson: validatedData.contactPerson,
+      contactPhone: validatedData.contactPhone,
+      contactEmail: validatedData.contactEmail,
     })
 
     console.log("✅ Profil erfolgreich generiert!")
@@ -113,10 +109,52 @@ export async function processCVAction(formData: FormData) {
       data: profileData,
     }
   } catch (error: any) {
-    console.error("❌ Unerwarteter Fehler beim CV-Processing:", error)
+    console.error("❌ Fehler beim CV-Processing:", error)
+
+    // Structured Error Response
+    if (error instanceof AppError) {
+      return {
+        success: false,
+        error: error.message,
+        code: error.code,
+      }
+    }
+
+    // Unbekannter Fehler
     return {
       success: false,
-      error: error.message || "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      error: getUserFriendlyErrorMessage(error),
+      code: ErrorCode.UNKNOWN_ERROR,
     }
+  }
+}
+
+/**
+ * Erstellt ein Fallback-Profil wenn CV-Parsing fehlschlägt
+ */
+function createFallbackProfile(formData: {
+  name: string
+  location: string
+  position: string
+  contactEmail: string
+}): ParsedCV {
+  return {
+    personalInfo: {
+      name: formData.name,
+      location: formData.location,
+      email: formData.contactEmail,
+      phone: undefined,
+    },
+    experience: [],
+    education: [],
+    skills: {
+      technical: [],
+      soft: [],
+      languages: [],
+    },
+    certifications: [],
+    projects: [],
+    summary: `${formData.position} mit Interesse an professioneller Weiterentwicklung. Profil erstellt aus Basisdaten.`,
+    experienceYears: "< 1 Jahr",
   }
 }

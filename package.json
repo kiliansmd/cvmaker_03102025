@@ -7,6 +7,10 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "node .next/standalone/server.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:watch": "vitest --watch",
     "postbuild": "node -e \"const fs=require('fs');const path=require('path');const ensure=(p)=>fs.mkdirSync(p,{recursive:true});const cp=(s,d)=>fs.cpSync(s,d,{recursive:true,force:true});const dstStatic=path.join('.next','standalone','.next');ensure(dstStatic);cp(path.join('.next','static'),path.join(dstStatic,'static'));cp('public',path.join('.next','standalone','public'));\""
   },
   "dependencies": {
@@ -45,6 +49,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "file-type": "^21.0.0",
     "geist": "^1.3.1",
     "html2canvas": "latest",
     "input-otp": "1.4.1",
@@ -55,6 +60,7 @@
     "next-themes": "^0.4.4",
     "openai": "^4.56.0",
     "pdfjs-dist": "^3.11.174",
+    "puppeteer": "^24.24.1",
     "react": "^18",
     "react-day-picker": "9.8.0",
     "react-dom": "^18",
@@ -66,16 +72,20 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "ws": "latest",
-    "puppeteer": "^24.24.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^27.0.0",
     "postcss": "^8.5",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18 <21"

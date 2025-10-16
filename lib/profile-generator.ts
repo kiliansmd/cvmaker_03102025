@@ -1,6 +1,9 @@
-import type { ParsedCV } from "./cv-parser"
+import type { ParsedCV, CandidateProfile } from "./schemas"
 
-export interface CandidateProfileData {
+// Legacy type export für Backward Compatibility
+export type CandidateProfileData = CandidateProfile
+
+export interface __CandidateProfileData_DEPRECATED {
   title: string
   salaryExpectation: string
   availability: string
