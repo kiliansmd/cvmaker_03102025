@@ -60,7 +60,11 @@ async function convertPDFToImages(file: File, arrayBuffer: ArrayBuffer): Promise
   
   // Worker für Browser
   try {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - pdfjs-dist worker has no type definitions
     const workerSrc = (await import('pdfjs-dist/legacy/build/pdf.worker.entry')).default
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc
   } catch (error) {
     console.warn('PDF Worker konnte nicht geladen werden, verwende Fallback')
@@ -128,6 +132,8 @@ async function convertDocumentToImage(
   try {
     if (format === 'docx') {
       // DOCX → HTML via mammoth
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - mammoth.browser has no type definitions
       const mammoth = await import('mammoth/mammoth.browser')
       const { value: html } = await mammoth.convertToHtml({ arrayBuffer })
       container.innerHTML = html

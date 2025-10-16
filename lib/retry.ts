@@ -60,7 +60,7 @@ export async function withRetry<T>(
 
       console.warn(
         `⚠️ Retry ${attempt + 1}/${opts.maxRetries} nach ${Math.round(actualDelay)}ms:`,
-        error?.message || error
+        (error as any)?.message || error
       )
 
       opts.onRetry(attempt + 1, error)

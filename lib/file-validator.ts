@@ -46,11 +46,13 @@ export async function validateFile(
   let buffer: Buffer
 
   // File zu Buffer konvertieren
-  if (file instanceof Buffer) {
+  if (Buffer.isBuffer(file)) {
     buffer = file
-  } else {
+  } else if (file instanceof File) {
     const arrayBuffer = await file.arrayBuffer()
     buffer = Buffer.from(arrayBuffer)
+  } else {
+    throw new Error('Ungültiger Input-Typ: Erwartet File oder Buffer')
   }
 
   const size = buffer.length
