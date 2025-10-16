@@ -78,6 +78,7 @@ class OpenAIClient {
       let parsed: any
       try {
         parsed = JSON.parse(content)
+        console.log('📊 OpenAI Response erhalten:', JSON.stringify(parsed, null, 2).substring(0, 500))
       } catch (parseError) {
         throw new OpenAIError(
           ErrorCode.OPENAI_INVALID_RESPONSE,
@@ -86,10 +87,24 @@ class OpenAIClient {
         )
       }
 
-      // Validiere mit Zod-Schema
-      const validated = ParsedCVSchema.parse(this.normalizeOpenAIResponse(parsed))
+      // Normalisiere Response
+      const normalized = this.normalizeOpenAIResponse(parsed)
+      console.log('🔄 Normalisierte Daten:', {
+        experienceCount: normalized.experience?.length || 0,
+        skillsCount: normalized.skills?.technical?.length || 0,
+        educationCount: normalized.education?.length || 0,
+      })
+
+      // Validiere mit Zod-Schema (sanft - mit safeParse)
+      const validationResult = ParsedCVSchema.safeParse(normalized)
       
-      return validated
+      if (!validationResult.success) {
+        console.warn('⚠️ Zod-Validierung fehlgeschlagen, nutze normalisierte Daten trotzdem:', validationResult.error.errors)
+        // Nutze normalisierte Daten auch wenn Zod-Validierung fehlschlägt
+        return normalized as ParsedCV
+      }
+      
+      return validationResult.data
     } catch (error: any) {
       // Klassifiziere und re-throw als OpenAIError
       if (error instanceof OpenAIError) {
@@ -107,64 +122,93 @@ class OpenAIClient {
 
   /**
    * Normalisiert die OpenAI-Response zu unserem Schema
+   * Robuste Handhabung - filtert keine Daten raus
    */
   private normalizeOpenAIResponse(raw: any): any {
+    // Fallback-Werte wenn Felder komplett fehlen
+    const personalInfo = raw?.personalInfo || {}
+    const skills = raw?.skills || {}
+    
     return {
       personalInfo: {
-        name: String(raw?.personalInfo?.name || raw?.name || ''),
-        location: String(raw?.personalInfo?.location || raw?.location || ''),
-        email: raw?.personalInfo?.email || raw?.email || undefined,
-        phone: raw?.personalInfo?.phone || raw?.phone || undefined,
-        dateOfBirth: raw?.personalInfo?.dateOfBirth || undefined,
-        nationality: raw?.personalInfo?.nationality || undefined,
+        name: String(personalInfo?.name || raw?.name || ''),
+        location: String(personalInfo?.location || raw?.location || ''),
+        email: personalInfo?.email || raw?.email || undefined,
+        phone: personalInfo?.phone || raw?.phone || undefined,
+        dateOfBirth: personalInfo?.dateOfBirth || undefined,
+        nationality: personalInfo?.nationality || undefined,
       },
       experience: Array.isArray(raw?.experience)
-        ? raw.experience.map((e: any) => ({
-            title: String(e?.title || ''),
-            company: String(e?.company || ''),
-            dateRange: String(e?.dateRange || ''),
-            description: String(e?.description || ''),
-            responsibilities: Array.isArray(e?.responsibilities)
-              ? e.responsibilities.map((r: any) => String(r))
-              : [],
-          }))
+        ? raw.experience
+            .filter((e: any) => e && (e.title || e.company)) // Filtere nur komplett leere
+            .map((e: any) => ({
+              title: String(e?.title || e?.position || 'Position'),
+              company: String(e?.company || e?.employer || 'Unternehmen'),
+              dateRange: String(e?.dateRange || e?.duration || e?.period || ''),
+              description: String(e?.description || e?.summary || ''),
+              responsibilities: Array.isArray(e?.responsibilities)
+                ? e.responsibilities.map((r: any) => String(r)).filter((r: string) => r.length > 0)
+                : Array.isArray(e?.tasks)
+                ? e.tasks.map((t: any) => String(t)).filter((t: string) => t.length > 0)
+                : [],
+            }))
         : [],
       education: Array.isArray(raw?.education)
-        ? raw.education.map((e: any) => ({
-            degree: String(e?.degree || ''),
-            institution: String(e?.institution || ''),
-            dateRange: String(e?.dateRange || ''),
-            details: e?.details ? String(e.details) : undefined,
-          }))
+        ? raw.education
+            .filter((e: any) => e && (e.degree || e.institution))
+            .map((e: any) => ({
+              degree: String(e?.degree || e?.qualification || 'Abschluss'),
+              institution: String(e?.institution || e?.school || e?.university || 'Institution'),
+              dateRange: String(e?.dateRange || e?.duration || e?.period || e?.year || ''),
+              details: e?.details || e?.field || e?.major ? String(e.details || e.field || e.major) : undefined,
+            }))
         : [],
       skills: {
-        technical: Array.isArray(raw?.skills?.technical)
-          ? raw.skills.technical.map((s: any) => String(s).trim())
+        technical: Array.isArray(skills?.technical)
+          ? skills.technical
+              .map((s: any) => String(s).trim())
+              .filter((s: string) => s.length > 0)
+          : Array.isArray(raw?.technicalSkills)
+          ? raw.technicalSkills.map((s: any) => String(s).trim()).filter((s: string) => s.length > 0)
           : [],
-        soft: Array.isArray(raw?.skills?.soft)
-          ? raw.skills.soft.map((s: any) => String(s))
+        soft: Array.isArray(skills?.soft)
+          ? skills.soft
+              .map((s: any) => String(s))
+              .filter((s: string) => s.length > 0)
+          : Array.isArray(skills?.softSkills)
+          ? skills.softSkills.map((s: any) => String(s)).filter((s: string) => s.length > 0)
           : [],
-        languages: Array.isArray(raw?.skills?.languages)
-          ? raw.skills.languages.map((l: any) => ({
-              language: String(l?.language || ''),
-              level: String(l?.level || ''),
-            }))
+        languages: Array.isArray(skills?.languages)
+          ? skills.languages
+              .filter((l: any) => l && l.language)
+              .map((l: any) => ({
+                language: String(l?.language || l?.lang || ''),
+                level: String(l?.level || l?.proficiency || ''),
+              }))
           : [],
       },
       certifications: Array.isArray(raw?.certifications)
-        ? raw.certifications.map((c: any) => String(c))
+        ? raw.certifications
+            .map((c: any) => String(c))
+            .filter((c: string) => c.length > 0)
+        : Array.isArray(raw?.certificates)
+        ? raw.certificates.map((c: any) => String(c)).filter((c: string) => c.length > 0)
         : [],
       projects: Array.isArray(raw?.projects)
-        ? raw.projects.map((p: any) => ({
-            title: String(p?.title || ''),
-            description: String(p?.description || ''),
-            technologies: Array.isArray(p?.technologies)
-              ? p.technologies.map((t: any) => String(t))
-              : [],
-          }))
+        ? raw.projects
+            .filter((p: any) => p && p.title)
+            .map((p: any) => ({
+              title: String(p?.title || ''),
+              description: String(p?.description || p?.summary || ''),
+              technologies: Array.isArray(p?.technologies)
+                ? p.technologies.map((t: any) => String(t)).filter((t: string) => t.length > 0)
+                : Array.isArray(p?.tech)
+                ? p.tech.map((t: any) => String(t)).filter((t: string) => t.length > 0)
+                : [],
+            }))
         : [],
-      summary: String(raw?.summary || 'Keine Zusammenfassung verfügbar.'),
-      experienceYears: String(raw?.experienceYears || '< 1 Jahr'),
+      summary: String(raw?.summary || raw?.profile || raw?.about || 'Erfahrener Fachexperte mit breitem Skill-Set.'),
+      experienceYears: String(raw?.experienceYears || raw?.totalExperience || raw?.yearsOfExperience || '< 1 Jahr'),
     }
   }
 

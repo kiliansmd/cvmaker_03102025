@@ -93,6 +93,14 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
 
     // 6. Generiere finales Kandidaten-Profil
     console.log("📋 Generiere Profil-Daten...")
+    console.log("📊 ParsedCV-Daten vor Profile-Generierung:", {
+      hasExperience: (parsedCV.experience || []).length > 0,
+      hasSkills: (parsedCV.skills?.technical || []).length > 0,
+      hasEducation: (parsedCV.education || []).length > 0,
+      experienceYears: parsedCV.experienceYears,
+      name: parsedCV.personalInfo?.name,
+    })
+    
     const profileData = generateProfileFromParsedCV(parsedCV, {
       position: validatedData.position,
       salary: validatedData.salary,
@@ -100,9 +108,17 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
       contactPerson: validatedData.contactPerson,
       contactPhone: validatedData.contactPhone,
       contactEmail: validatedData.contactEmail,
+      location: validatedData.location,
     })
 
     console.log("✅ Profil erfolgreich generiert!")
+    console.log("📊 Generiertes Profil:", {
+      title: profileData.title,
+      itSkillsCount: profileData.itSkills?.length || 0,
+      languagesCount: profileData.languages?.length || 0,
+      educationCount: profileData.education?.length || 0,
+      experienceTimelineCount: profileData.experienceTimeline?.length || 0,
+    })
 
     return {
       success: true,
