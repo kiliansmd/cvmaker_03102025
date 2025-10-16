@@ -224,6 +224,8 @@ export default function HomePage() {
 
       if (result && typeof result === 'object' && 'success' in result && (result as any).success && (result as any).data) {
         console.log("✅ Profil erfolgreich erstellt!")
+        console.log("📊 Server-Response-Data:", (result as any).data)
+        
         // Schritt 2: Nach dem Parsing → Datei zu Bildern konvertieren
         let attachments: any[] = []
         if (cvFile) {
@@ -240,21 +242,43 @@ export default function HomePage() {
             attachments = []
           }
         }
+        
         // Wenn Daten leer/unvollständig sind, mische Formularinfos rein
         const data = (result as any).data || {}
+        
+        console.log("📊 Received Data Arrays:", {
+          profileSummary: data.profileSummary?.length || 0,
+          itSkills: data.itSkills?.length || 0,
+          languages: data.languages?.length || 0,
+          education: data.education?.length || 0,
+          experienceTimeline: data.experienceTimeline?.length || 0,
+          topSkills: data.topSkills?.length || 0,
+        })
+        
         const normalized = {
           ...data,
           title: data.title || formData.position,
           availability: data.availability || `Verfügbar in ${formData.availability}`,
           salaryExpectation: data.salaryExpectation || formData.salary,
           location: data.location || formData.location,
-          profileSummary: Array.isArray(data.profileSummary) ? data.profileSummary : [],
-          itSkills: Array.isArray(data.itSkills) ? data.itSkills : [],
-          languages: Array.isArray(data.languages) ? data.languages : [],
-          education: Array.isArray(data.education) ? data.education : [],
-          qualifications: Array.isArray(data.qualifications) ? data.qualifications : [],
-          personalDetails: Array.isArray(data.personalDetails) ? data.personalDetails : [],
+          profileSummary: Array.isArray(data.profileSummary) && data.profileSummary.length > 0 ? data.profileSummary : [],
+          itSkills: Array.isArray(data.itSkills) && data.itSkills.length > 0 ? data.itSkills : [],
+          languages: Array.isArray(data.languages) && data.languages.length > 0 ? data.languages : [],
+          education: Array.isArray(data.education) && data.education.length > 0 ? data.education : [],
+          qualifications: Array.isArray(data.qualifications) && data.qualifications.length > 0 ? data.qualifications : [],
+          personalDetails: Array.isArray(data.personalDetails) && data.personalDetails.length > 0 ? data.personalDetails : [],
+          topSkills: Array.isArray(data.topSkills) && data.topSkills.length > 0 ? data.topSkills : [],
+          keyProjects: Array.isArray(data.keyProjects) && data.keyProjects.length > 0 ? data.keyProjects : [],
+          experienceTimeline: Array.isArray(data.experienceTimeline) && data.experienceTimeline.length > 0 ? data.experienceTimeline : [],
         }
+        
+        console.log("📊 Normalized Profile:", {
+          title: normalized.title,
+          itSkills: normalized.itSkills.length,
+          languages: normalized.languages.length,
+          education: normalized.education.length,
+        })
+        
         // Schritt 3/4: Ziellayout mit Feldern + konvertierten Bildern rendern
         setGeneratedProfile((prev: any) => ({ ...normalized, attachments }))
         // Vorschau nach oben und im Vollbild anzeigen

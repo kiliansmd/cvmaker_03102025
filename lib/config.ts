@@ -10,7 +10,10 @@ const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
  */
 function validateEnvironment(): Environment {
   // Im Build-Prozess: Verwende Dummy-Werte wenn nicht gesetzt
-  const apiKey = process.env.OPENAI_API_KEY || (isBuildTime ? 'sk-build-dummy' : undefined)
+  // WICHTIG: Zur Runtime IMMER echten Key verwenden!
+  const apiKey = isBuildTime && !process.env.OPENAI_API_KEY
+    ? 'sk-build-dummy'
+    : process.env.OPENAI_API_KEY
   
   try {
     const env = EnvironmentSchema.parse({

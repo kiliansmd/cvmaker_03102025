@@ -30,6 +30,9 @@ class OpenAIClient {
    * Parse CV mit strukturiertem Output und Retry-Logic
    */
   async parseCV(cvText: string, additionalInfo?: string): Promise<ParsedCV> {
+    console.log('🔑 OpenAI-Client verwendet API-Key:', config.OPENAI_API_KEY.substring(0, 15) + '...')
+    console.log('🔑 OpenAI-Model:', config.OPENAI_MODEL)
+    
     if (!cvText || cvText.trim().length < 50) {
       throw new OpenAIError(
         ErrorCode.VALIDATION_ERROR,
@@ -40,6 +43,9 @@ class OpenAIClient {
 
     const systemPrompt = this.buildSystemPrompt()
     const userPrompt = this.buildUserPrompt(cvText, additionalInfo)
+    
+    console.log('📝 User-Prompt-Länge:', userPrompt.length, 'Zeichen')
+    console.log('📝 System-Prompt-Länge:', systemPrompt.length, 'Zeichen')
 
     try {
       const response = await withRetry(
