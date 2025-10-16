@@ -85,50 +85,93 @@ export function generateProfileFromParsedCV(
   const nameParts = (parsedCV.personalInfo.name || "").split(" ")
   const initials = nameParts.map((part) => part[0]).join(".")
 
-  // Generiere Profil-Zusammenfassung (3 Absätze)
+  // Generiere Profil-Zusammenfassung (3 Absätze) - nutze tatsächliche CV-Daten
+  const latestRole = parsedCV.experience?.[0]?.title || formData.position
+  const topSkillsText = (parsedCV.skills.technical || [])
+    .slice(0, 4)
+    .map(s => s.replace(/\s*\(.+?\)$/, '')) // Entferne Level-Klammern für bessere Lesbarkeit
+    .join(", ") || "moderne Technologien"
+  
   const profileSummary = [
-    `${formData.position} mit ${parsedCV.experienceYears} relevanter Erfahrung. ${parsedCV.summary}`,
-    `Schwerpunkte: ${(parsedCV.skills.technical || []).slice(0, 3).join(", ") || "moderne Technologien"}. Projektpraxis u. a. bei ${
-      parsedCV.experience?.[0]?.company || "führenden Unternehmen"
-    } in der Rolle ${parsedCV.experience?.[0]?.title || "Technical Consultant"}.`,
-    `Arbeitsweise: analytisch, strukturiert und unternehmerisch. Ziel: messbare Ergebnisse und nachhaltige Lösungen in enger Zusammenarbeit mit Stakeholdern.`,
+    `${latestRole} mit ${parsedCV.experienceYears} relevanter Berufserfahrung. ${parsedCV.summary}`,
+    `Kernkompetenzen: ${topSkillsText}. ${
+      parsedCV.experience?.[0] 
+        ? `Aktuelle Tätigkeit bei ${parsedCV.experience[0].company} als ${parsedCV.experience[0].title}.`
+        : `Projektpraxis bei führenden Unternehmen.`
+    }`,
+    `Arbeitsweise: ${
+      (parsedCV.skills.soft || []).slice(0, 2).join(", ") || "analytisch, strukturiert und lösungsorientiert"
+    }. Fokus auf messbare Ergebnisse und nachhaltige Lösungen in enger Zusammenarbeit mit Stakeholdern.`,
   ]
 
   // Generiere Top Skills (max 4)
   const topSkills = generateTopSkills(parsedCV)
 
-  // Generiere Qualifikationen
+  // Generiere Qualifikationen - kombiniere die wichtigsten Aspekte
   const qualifications = [
+    // Zertifikate zuerst (wichtigste Credentials)
     ...(parsedCV.certifications || []).slice(0, 3),
-    `${parsedCV.experienceYears || "Erfahrung"} praktische Berufserfahrung`,
+    // Berufserfahrung
+    `${parsedCV.experienceYears || "Mehrjährige"} praktische Berufserfahrung`,
+    // Bildungsabschlüsse
     ...((parsedCV.education || []).slice(0, 2).map((edu) => `${edu.degree}, ${edu.institution}`)),
-    ...((parsedCV.skills.technical || []).slice(0, 3).map((skill) => `Expertise in ${skill}`)),
-  ]
+    // Top 3 Technical Skills (ohne Level-Klammern)
+    ...((parsedCV.skills.technical || [])
+      .slice(0, 3)
+      .map((skill) => {
+        const cleanSkill = skill.replace(/\s*\(.+?\)$/, '')
+        return `Expertise in ${cleanSkill}`
+      })
+    ),
+  ].filter(q => q && q.length > 0) // Entferne leere Einträge
 
-  // Generiere Personal Details
+  // Generiere Personal Details - nutze CV-Daten wo möglich
+  const currentPosition = parsedCV.experience?.[0]?.title || formData.position
+  const topTechnologies = (parsedCV.skills.technical || [])
+    .slice(0, 3)
+    .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .join(" + ") || "Technologien"
+  
   const personalDetails = [
     { label: "Verfügbarkeit", value: `Verfügbar in ${formData.availability}` },
     { label: "Gehaltsvorstellung", value: formData.salary },
-    { label: "Standort", value: (parsedCV.personalInfo && parsedCV.personalInfo.location) ? parsedCV.personalInfo.location : "-" },
+    { label: "Standort", value: parsedCV.personalInfo?.location || "-" },
     { label: "Arbeitsmodell", value: "Vollzeit (Hybrid/Remote möglich)" },
-    { label: "Zielposition", value: formData.position },
+    { label: "Aktuelle Position", value: currentPosition },
     {
-      label: "Besonderheit",
-      value: `${parsedCV.experienceYears || "Erfahrung"} + ${
-        (parsedCV.certifications || [])[0] || "Zertifiziert"
-      } + ${(parsedCV.skills.technical || [])[0] || "Technologien"}`,
+      label: "Berufserfahrung",
+      value: `${parsedCV.experienceYears} in ${(parsedCV.experience || []).length} Position${(parsedCV.experience || []).length !== 1 ? 'en' : ''}`,
+    },
+    {
+      label: "Kernkompetenzen",
+      value: topTechnologies,
     },
     {
       label: "Sprachkenntnisse",
-      value: (parsedCV.skills.languages || []).map((l) => `${l.language} (${l.level})`).join(", "),
+      value: (parsedCV.skills.languages || []).length > 0
+        ? (parsedCV.skills.languages || []).map((l) => `${l.language} (${l.level})`).join(", ")
+        : "-",
     },
-  ]
+  ].filter(d => d.value && d.value !== "-" && d.value.length > 0)
 
-  // Generiere IT Skills mit geschätzten Levels
-  const itSkills = (parsedCV.skills.technical || []).map((skill, index) => ({
-    skill,
-    level: index < 3 ? "Expertenkenntnisse" : index < 6 ? "Sehr gute Kenntnisse" : "Gute Kenntnisse",
-  }))
+  // Generiere IT Skills - nutze Level aus Parsing wenn vorhanden
+  const itSkills = (parsedCV.skills.technical || []).map((skill, index) => {
+    // Prüfe ob Skill bereits Level-Info enthält: "Skill (Level)"
+    const match = skill.match(/^(.+?)\s*\((.+?)\)$/)
+    if (match) {
+      const [, skillName, skillLevel] = match
+      return {
+        skill: skillName.trim(),
+        level: skillLevel.trim(),
+      }
+    }
+    
+    // Fallback: Schätze Level basierend auf Position in der Liste
+    return {
+      skill,
+      level: index < 3 ? "Expertenkenntnisse" : index < 6 ? "Sehr gute Kenntnisse" : "Gute Kenntnisse",
+    }
+  })
 
   // Languages
   const languages = (parsedCV.skills.languages || []).map((l) => ({
@@ -161,11 +204,19 @@ export function generateProfileFromParsedCV(
     description: exp.description,
   }))
 
-  // Career Goals
+  // Career Goals - basierend auf aktueller Position und Skills
+  const currentRole = parsedCV.experience?.[0]?.title || formData.position
+  const topTwoSkills = (parsedCV.skills.technical || [])
+    .slice(0, 2)
+    .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .join(" und ")
+  
   const careerGoals = [
     {
-      title: `Senior ${formData.position}`,
-      description: `Weiterentwicklung zum Senior ${formData.position} mit strategischer Verantwortung für komplexe Projekte und technische Führung.`,
+      title: currentRole.includes('Senior') || currentRole.includes('Lead') 
+        ? `Expert ${currentRole}` 
+        : `Senior ${currentRole}`,
+      description: `Weiterentwicklung mit vertiefter Expertise und strategischer Verantwortung für komplexe Projekte und technische Führung.`,
       icon: null,
     },
     {
@@ -175,36 +226,53 @@ export function generateProfileFromParsedCV(
     },
     {
       title: "Spezialisierung",
-      description: `Vertiefung der Expertise in ${(parsedCV.skills.technical || []).slice(0, 2).join(" und ")} für spezialisierte Beratungsdienstleistungen.`,
+      description: topTwoSkills 
+        ? `Vertiefung der Expertise in ${topTwoSkills} für spezialisierte Beratungsdienstleistungen.`
+        : "Vertiefung der Fachexpertise für spezialisierte Projekte.",
       icon: null,
     },
   ]
 
-  // Interests (aus Skills)
-  const interests = (parsedCV.skills.technical || []).slice(0, 4).map((skill, index) => ({
-    name: skill,
-    icon: null,
-  }))
+  // Interests (aus Skills) - ohne Level-Klammern
+  const interests = (parsedCV.skills.technical || [])
+    .slice(0, 4)
+    .map((skill) => ({
+      name: skill.replace(/\s*\(.+?\)$/, ''), // Entferne Level-Info
+      icon: null,
+    }))
 
-  // Personality Traits
+  // Personality Traits - kombiniere Erfahrung, Bildung und Skills
+  const topThreeSkills = (parsedCV.skills.technical || [])
+    .slice(0, 3)
+    .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .join(", ")
+  
   const personalityTraits = [
-    `${parsedCV.experienceYears || "Erfahrung"} Berufserfahrung mit kontinuierlicher Weiterentwicklung`,
+    `${parsedCV.experienceYears || "Mehrjährige"} Berufserfahrung mit kontinuierlicher Weiterentwicklung`,
     `${parsedCV.education?.[0]?.degree || "Akademischer Hintergrund"}`,
     ...((parsedCV.certifications || []).slice(0, 2)),
-    `Expertise in ${(parsedCV.skills.technical || []).slice(0, 3).join(", ")}`,
+    topThreeSkills ? `Expertise in ${topThreeSkills}` : "",
     ...((parsedCV.skills.soft || []).slice(0, 2)),
-  ]
+  ].filter((t): t is string => typeof t === 'string' && t.length > 0)
 
-  // Motivation Factors
+  // Motivation Factors - basierend auf tatsächlichen Skills
+  const topTwoSkillsClean = (parsedCV.skills.technical || [])
+    .slice(0, 2)
+    .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .join(" und ")
+  
   const motivationFactors = [
-    `Arbeit mit ${(parsedCV.skills.technical || []).slice(0, 2).join(" und ")}`,
+    topTwoSkillsClean ? `Arbeit mit ${topTwoSkillsClean}` : "Arbeit mit modernen Technologien",
     "Entwicklung und Optimierung komplexer Systeme",
     "Kontinuierliche Weiterbildung in zukunftsweisenden Technologien",
     "Zusammenarbeit in interdisziplinären Teams",
-  ]
+  ].filter(m => m && m.length > 0)
+
+  // Verwende die aktuellste Rolle aus dem CV, falls vorhanden, sonst Formular-Input
+  const profileTitle = parsedCV.experience?.[0]?.title || formData.position
 
   return {
-    title: formData.position,
+    title: profileTitle,
     salaryExpectation: formData.salary,
     availability: `Verfügbar in ${formData.availability}`,
     location: parsedCV.personalInfo.location,
@@ -245,45 +313,69 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
     icon: any
   }> = []
 
-  // Skill 1: Hauptkompetenz aus Experience
+  // Skill 1: Aktuelle/Letzte Position (mit exaktem Jobtitel)
   if ((parsedCV.experience || [])[0]) {
+    const exp = parsedCV.experience[0]
     topSkills.push({
       id: "1",
-      name: parsedCV.experience[0].title,
-      description: parsedCV.experience[0].description,
+      name: exp.title, // Exakter Jobtitel aus CV
+      description: exp.description || `Verantwortlich für: ${(exp.responsibilities || []).slice(0, 2).join(", ")}`,
       icon: null,
     })
   }
 
-  // Skill 2: Technische Skills
+  // Skill 2: Top 3 Technische Skills (ohne Level-Klammern für Anzeige)
   if ((parsedCV.skills.technical || []).length > 0) {
+    const topTechSkills = parsedCV.skills.technical
+      .slice(0, 3)
+      .map(s => s.replace(/\s*\(.+?\)$/, '')) // Entferne Level für Anzeige
+      .join(", ")
+    
     topSkills.push({
       id: "2",
-      name: parsedCV.skills.technical.slice(0, 3).join(", "),
-      description: `Umfassende Expertise in ${parsedCV.skills.technical.slice(0, 3).join(", ")} mit praktischer Erfahrung in komplexen Projekten.`,
+      name: "Technische Expertise",
+      description: `Umfassende Kenntnisse in ${topTechSkills} mit nachgewiesener Projekterfahrung und ${parsedCV.experienceYears} praktischer Anwendung.`,
       icon: null,
     })
   }
 
-  // Skill 3: Aus Projekten oder Experience
-  if ((parsedCV.experience || [])[1]) {
+  // Skill 3: Weitere Position oder Zertifikate
+  if ((parsedCV.certifications || []).length > 0) {
+    const certText = parsedCV.certifications.slice(0, 2).join(", ")
     topSkills.push({
       id: "3",
-      name: `${parsedCV.experience[1].title} & Projektmanagement`,
-      description: parsedCV.experience[1].description,
+      name: "Zertifizierungen & Qualifikationen",
+      description: `Zertifizierte Expertise: ${certText}. Kontinuierliche Weiterbildung in aktuellen Technologien und Methoden.`,
+      icon: null,
+    })
+  } else if ((parsedCV.experience || [])[1]) {
+    const exp = parsedCV.experience[1]
+    topSkills.push({
+      id: "3",
+      name: exp.title,
+      description: exp.description || `${exp.company}: ${(exp.responsibilities || []).slice(0, 1).join("")}`,
       icon: null,
     })
   }
 
-  // Skill 4: Soft Skills / Zertifizierungen
-  if ((parsedCV.certifications || []).length > 0) {
+  // Skill 4: Projekte oder Ausbildung
+  if (parsedCV.projects && parsedCV.projects.length > 0) {
+    const project = parsedCV.projects[0]
     topSkills.push({
       id: "4",
-      name: parsedCV.certifications[0],
-      description: `Zertifizierte Expertise mit ${parsedCV.certifications[0]} und kontinuierlicher Weiterbildung.`,
+      name: project.title,
+      description: project.description,
+      icon: null,
+    })
+  } else if ((parsedCV.education || [])[0]) {
+    const edu = parsedCV.education[0]
+    topSkills.push({
+      id: "4",
+      name: edu.degree,
+      description: `Akademischer Hintergrund: ${edu.degree} an ${edu.institution} (${edu.dateRange})`,
       icon: null,
     })
   }
 
-  return topSkills.slice(0, 4)
+  return topSkills.slice(0, 4).filter(s => s.name && s.description)
 }

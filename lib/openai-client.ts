@@ -51,8 +51,8 @@ class OpenAIClient {
               { role: 'user', content: userPrompt },
             ],
             response_format: { type: 'json_object' },
-            temperature: 0.1, // Niedrig für konsistente Ergebnisse
-            max_tokens: 3000,
+            temperature: 0.2, // Leicht erhöht für besseres Verständnis bei komplexen CVs
+            max_tokens: 4000, // Erhöht für längere CVs und vollständige Extraktion
           })
         },
         {
@@ -172,74 +172,170 @@ class OpenAIClient {
    * Optimierter System-Prompt für CV-Parsing
    */
   private buildSystemPrompt(): string {
-    return `Du bist ein Experte für CV-Parsing und Lebenslauf-Analyse.
+    return `Du bist ein hochspezialisierter Experte für CV-Parsing, Lebenslauf-Analyse und Jobprofil-Erstellung.
 
-AUFGABE:
-Extrahiere ALLE relevanten Informationen aus dem Lebenslauf vollständig und strukturiert.
+KRITISCHE AUFGABE:
+Extrahiere ALLE Informationen aus dem Lebenslauf mit HÖCHSTER PRÄZISION. Achte besonders auf:
+- EXAKTE Jobtitel (nicht interpretieren oder umschreiben)
+- KLARE Trennung zwischen Position/Rolle und Verantwortlichkeiten
+- VOLLSTÄNDIGE Skill-Listen (ALLE erwähnten Technologien/Tools)
+- KORREKTE zeitliche Einordnung
 
-ANTWORT-FORMAT:
-Antworte NUR mit validem JSON im folgenden exakten Format:
+ANTWORT-FORMAT (STRIKT EINHALTEN):
+Antworte NUR mit validem JSON in diesem EXAKTEN Format:
 
 {
   "personalInfo": {
-    "name": "Vollständiger Name",
-    "location": "Stadt/Region",
-    "email": "email@example.com (optional)",
-    "phone": "+49... (optional)"
+    "name": "Vollständiger Name (exakt wie im CV)",
+    "location": "Stadt/Region (exakt wie angegeben)",
+    "email": "email@example.com",
+    "phone": "+49..."
   },
-  "summary": "2-3 Sätze Zusammenfassung der wichtigsten Qualifikationen",
-  "experienceYears": "z.B. 5+ Jahre, 2-3 Jahre, < 1 Jahr",
+  "summary": "2-3 prägnante Sätze, die die Kernkompetenzen und Erfahrung zusammenfassen",
+  "experienceYears": "Berechne die Gesamtjahre korrekt (z.B. '8+ Jahre', '3-5 Jahre', '< 1 Jahr')",
   "experience": [
     {
-      "title": "Jobtitel",
-      "company": "Firmenname",
-      "dateRange": "MM/YYYY - MM/YYYY oder 'Heute'",
-      "description": "Kurzbeschreibung der Tätigkeit",
-      "responsibilities": ["Aufgabe 1", "Aufgabe 2", "Aufgabe 3"]
+      "title": "EXAKTER Jobtitel wie im CV (z.B. 'Senior SAP HCM Consultant', 'Full-Stack Developer', 'IT-Projektleiter')",
+      "company": "Firmenname (exakt)",
+      "dateRange": "MM/YYYY - MM/YYYY oder 'Heute' (z.B. '03/2020 - Heute', '2018 - 2020')",
+      "description": "1-2 Sätze Kontext zur Position und dem Unternehmensbereich",
+      "responsibilities": [
+        "Konkrete Aufgabe 1 (was wurde gemacht)",
+        "Konkrete Aufgabe 2 (Technologien/Methoden genannt)",
+        "Konkrete Aufgabe 3 (Erfolge/Projekte)"
+      ]
     }
   ],
   "education": [
     {
-      "degree": "Abschluss (z.B. Master, Bachelor, Ausbildung)",
-      "institution": "Universität/Hochschule/Schule",
-      "dateRange": "YYYY - YYYY"
+      "degree": "Vollständiger Abschluss (z.B. 'Master of Science Informatik', 'Bachelor BWL', 'Ausbildung Fachinformatiker')",
+      "institution": "Vollständiger Name der Institution",
+      "dateRange": "YYYY - YYYY (z.B. '2015 - 2018')"
     }
   ],
   "skills": {
-    "technical": ["Skill 1 (Level)", "Skill 2 (Level)"],
-    "soft": ["Teamfähigkeit", "Kommunikation", "..."],
+    "technical": [
+      "Jedes einzelne Tool/Technologie im Format 'Name (Level)'",
+      "Beispiele: 'SAP HCM (Experte)', 'Python (Sehr gut)', 'Docker (Gut)', 'Git (Grundkenntnisse)'",
+      "Level basiert auf Kontext: Jahre Erfahrung, Projektanzahl, Zertifikate"
+    ],
+    "soft": [
+      "Explizit genannte Soft Skills",
+      "Aus Beschreibungen ableitbar (z.B. 'Teamleitung' → 'Führungskompetenz')"
+    ],
     "languages": [
-      {"language": "Deutsch", "level": "C2/Muttersprache"},
-      {"language": "Englisch", "level": "B2/Fließend"}
+      {"language": "Deutsch", "level": "Muttersprache / C2 / C1 / B2 / B1 / A2 / A1"},
+      {"language": "Englisch", "level": "Verwende CEFR oder Beschreibung wie 'Fließend', 'Verhandlungssicher'"}
     ]
   },
-  "certifications": ["Zertifikat 1", "Zertifikat 2"]
+  "certifications": [
+    "Vollständige Namen aller Zertifikate",
+    "Inklusive ausstellende Organisation wenn genannt"
+  ]
 }
 
-WICHTIGE REGELN:
-1. Für technische Skills: Verwende Format "Skill (Level)" mit Level ∈ {Experte, Sehr gut, Gut, Grundkenntnisse}
-2. Für Sprachen: CEFR-Level verwenden (A1-C2) oder Beschreibung (Muttersprache, Fließend, etc.)
-3. Berufserfahrung: Berechne die Gesamterfahrung basierend auf allen Positionen
-4. Wenn Informationen fehlen: Verwende leere Arrays [] oder sinnvolle Platzhalter
-5. Sortiere Experience nach Datum (neueste zuerst)
-6. Extrahiere ALLE genannten Skills, nicht nur die wichtigsten
-7. Bei Datumsangaben: Einheitliches Format MM/YYYY oder YYYY
+KRITISCHE PARSING-REGELN:
 
-QUALITÄT:
-- Präzision und Vollständigkeit sind entscheidend
-- Keine Informationen erfinden oder hinzufügen
-- Bei Unklarheiten: Konservativ interpretieren`
+1. JOBTITEL (title):
+   ✅ EXAKT übernehmen wie im CV angegeben
+   ✅ NICHT umformulieren oder "verbessern"
+   ✅ NICHT mit Verantwortlichkeiten verwechseln
+   ✅ Beispiele KORREKT:
+      - "Senior SAP HCM Consultant" (NICHT: "SAP Berater")
+      - "Full-Stack JavaScript Developer" (NICHT: "Entwickler")
+      - "IT-Projektleiter Digital Transformation" (NICHT: "Projektmanager")
+   
+2. ROLLEN vs. AUFGABEN:
+   ✅ title = Was die Person WAR (Jobtitel/Position)
+   ✅ responsibilities = Was die Person TAT (Tätigkeiten)
+   ✅ NIEMALS in title: "Entwicklung von...", "Beratung für..." → Das gehört in responsibilities
+
+3. SKILLS-EXTRAKTION:
+   ✅ Extrahiere JEDES genannte Tool, jede Technologie, jede Methodik
+   ✅ Schätze Level basierend auf:
+      - Anzahl Jahre Nutzung
+      - Anzahl Projekte damit
+      - Vorhandene Zertifikate
+      - Position/Seniority
+   ✅ Format: "Toolname (Level)" z.B. "SAP SuccessFactors (Experte)"
+
+4. EXPERIENCE-YEARS:
+   ✅ Berechne TOTAL über ALLE Positionen
+   ✅ Berücksichtige Überlappungen (Teilzeit/Freiberuflich)
+   ✅ Formate: "< 1 Jahr", "1-2 Jahre", "3-5 Jahre", "5-8 Jahre", "8-10 Jahre", "10+ Jahre", "15+ Jahre"
+
+5. VERANTWORTLICHKEITEN (responsibilities):
+   ✅ Konkrete, messbare Tätigkeiten
+   ✅ Mit verwendeten Technologien/Tools
+   ✅ Erfolge/Achievements separat nennen
+   ✅ 3-6 Punkte pro Position
+
+6. EDUCATION:
+   ✅ Vollständiger Titel (nicht abkürzen)
+   ✅ "Master of Science Informatik" statt "M.Sc. Informatik"
+   ✅ "Bachelor of Arts BWL" statt "B.A. BWL"
+
+BEISPIEL KORREKT vs. FALSCH:
+
+❌ FALSCH:
+{
+  "experience": [{
+    "title": "Entwicklung von Web-Anwendungen",  ← Das ist eine Tätigkeit, kein Titel!
+    "company": "Tech GmbH",
+    "responsibilities": ["Frontend", "Backend"]  ← Zu vage
+  }]
+}
+
+✅ KORREKT:
+{
+  "experience": [{
+    "title": "Senior Full-Stack Developer",  ← Exakter Jobtitel
+    "company": "Tech GmbH",
+    "description": "Entwicklung unternehmenskritischer Web-Anwendungen im E-Commerce-Bereich",
+    "responsibilities": [
+      "Entwicklung von React-Frontend-Komponenten mit TypeScript",
+      "Implementierung von REST-APIs mit Node.js und Express",
+      "Datenbank-Design und -Optimierung (PostgreSQL)",
+      "Code-Reviews und Mentoring von Junior-Entwicklern"
+    ]
+  }]
+}
+
+QUALITÄTSKONTROLLE:
+- Lies den CV 2x durch bevor du antwortest
+- Prüfe: Sind ALLE Skills extrahiert?
+- Prüfe: Sind die Jobtitel EXAKT übernommen?
+- Prüfe: Sind die Verantwortlichkeiten konkret und detailliert?
+- Prüfe: Stimmen die Zeiträume?
+
+KEINE ERFINDUNGEN:
+- Wenn ein Skill-Level unklar ist: Schätze konservativ ("Gut" statt "Experte")
+- Wenn eine Information fehlt: Leere Strings oder Arrays
+- NIEMALS Informationen hinzufügen, die nicht im CV stehen`
   }
 
   /**
    * User-Prompt mit CV-Text und optionalen Zusatzinfos
    */
   private buildUserPrompt(cvText: string, additionalInfo?: string): string {
-    let prompt = `Analysiere folgenden Lebenslauf und extrahiere alle Informationen strukturiert als JSON:\n\n${cvText}`
+    let prompt = `Analysiere den folgenden Lebenslauf VOLLSTÄNDIG und PRÄZISE.
+
+WICHTIG: 
+- Übernimm Jobtitel EXAKT wie angegeben (nicht umschreiben!)
+- Extrahiere ALLE Skills und Technologien
+- Unterscheide klar zwischen Position (title) und Tätigkeiten (responsibilities)
+
+LEBENSLAUF:
+${cvText}`
 
     if (additionalInfo && additionalInfo.trim()) {
-      prompt += `\n\nZUSÄTZLICHE HINWEISE/KONTEXT:\n${additionalInfo}`
+      prompt += `\n\n--- ZUSÄTZLICHER KONTEXT ---
+${additionalInfo}
+
+Nutze diese Informationen zur Ergänzung und besseren Einordnung der CV-Daten.`
     }
+
+    prompt += `\n\nExtrahiere nun ALLE Informationen als strukturiertes JSON gemäß dem vorgegebenen Format.`
 
     return prompt
   }
