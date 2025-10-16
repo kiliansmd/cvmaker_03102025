@@ -186,6 +186,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                         @page{ size: 1400px auto; margin:0 }
                         html,body{ margin:0; padding:0; background:white; }
                         .wrap{ width:1400px; margin:0 auto; }
+                        #candidate-profile{ width:1400px; margin:0 auto; }
                         *{-webkit-print-color-adjust: exact; print-color-adjust: exact}
                       </style></head><body><div class=\"wrap\">${container.outerHTML}</div></body></html>`
 
@@ -194,7 +195,11 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ html, width: 1400 })
                       })
-                      if (!res.ok) throw new Error('PDF konnte nicht erzeugt werden')
+                      if (!res.ok) {
+                        let info = ''
+                        try { const j = await res.json(); info = j?.error || '' } catch {}
+                        throw new Error(info || 'PDF konnte nicht erzeugt werden')
+                      }
                       const blob = await res.blob()
                       const url = URL.createObjectURL(blob)
                       const a = document.createElement('a')
@@ -205,9 +210,25 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                       a.remove()
                       URL.revokeObjectURL(url)
                     } catch (err: any) {
-                      console.error('PDF Export Fehler', err)
-                      const msg = err?.message || 'Unbekannter Fehler'
-                      alert(`PDF Export fehlgeschlagen: ${msg}`)
+                      console.warn('Server-PDF fehlgeschlagen, wechsle auf Client-Fallback', err)
+                      // Client-Fallback: HTML -> Canvas -> PDF
+                      try {
+                        const container = document.getElementById('candidate-profile')
+                        if (!container) throw new Error('Profil nicht gefunden')
+                        const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+                          import('html2canvas'),
+                          import('jspdf') as any,
+                        ])
+                        const canvas = await html2canvas(container as HTMLElement, { backgroundColor: '#ffffff', scale: 2 })
+                        const img = canvas.toDataURL('image/jpeg', 0.92)
+                        const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] })
+                        pdf.addImage(img, 'JPEG', 0, 0, canvas.width, canvas.height)
+                        pdf.save(`${(candidateData?.title || 'profil').replace(/\s+/g,'_')}.pdf`)
+                      } catch (fallbackErr: any) {
+                        console.error('PDF Fallback Fehler', fallbackErr)
+                        const msg = fallbackErr?.message || 'Unbekannter Fehler'
+                        alert(`PDF Export fehlgeschlagen: ${msg}`)
+                      }
                     }
                   }}
                   className="px-4 py-2 rounded-[var(--radius)] bg-white/90 text-[rgb(var(--brand))] hover:bg-white ui-focus"
@@ -721,7 +742,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   <div key={idx}>
                     <div className="flex items-center justify-between mb-3">
                       <div className="font-medium truncate">{f.name}</div>
-                      <div className="ui-muted text-sm">{f.type || 'Datei'} • {(f.size / 1024).toFixed(1)} KB</div>
+                      <div className="ui-muted text-sm">{f.type || 'Datei'} {f.size ? `• ${(f.size / 1024).toFixed(1)} KB` : ''}</div>
                     </div>
                     {(f.url || f.file) && (
                       <AttachmentAnyViewer key={`att-${f.url ?? f.name}-${idx}`} src={f.url} file={f.file} fileName={f.name} mimeType={f.type} />

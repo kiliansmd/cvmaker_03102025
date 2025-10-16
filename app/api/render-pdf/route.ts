@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { PDFDocument, rgb } from "pdf-lib"
 
 // POST /api/render-pdf
 // Body: { url?: string; html?: string; width?: number }
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     // Headless Browser starten
-    const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath?.()) || undefined
+    const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || (typeof puppeteer.executablePath === 'function' ? await puppeteer.executablePath() : undefined)
     const browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -80,22 +81,43 @@ export async function POST(req: Request) {
         return max
       })
 
-      // Viewport auf volle Höhe setzen, damit eine einzelne lange Seite erzeugt werden kann
-      await page.setViewport({ width: targetWidth, height: Math.min(fullHeight, 30_000) })
-      // Hinweis: Puppeteer limitiert Seitenhöhe (~ 30k px). Für sehr lange Seiten wird die PDF dennoch fortlaufend ohne Ränder erzeugt.
+      // Viewport auf volle (begrenzte) Höhe setzen, damit eine einzelne lange Seite erzeugt werden kann
+      const usedHeight = Math.min(fullHeight, 30_000)
+      await page.setViewport({ width: targetWidth, height: usedHeight })
+      // Hinweis: Puppeteer limitiert Seitenhöhe (~30k px). Wir matchen die PDF-Höhe exakt auf den verwendeten Viewport.
 
-      const pdfBuffer: Uint8Array = await page.pdf({
-        printBackground: true,
-        width: `${targetWidth}px`,
-        height: `${fullHeight}px`,
-        margin: { top: 0, right: 0, bottom: 0, left: 0 },
-        preferCSSPageSize: true,
-        pageRanges: "1",
-        displayHeaderFooter: false,
-        landscape: false,
+      let buffer: Buffer
+      try {
+        const pdfBuffer: Uint8Array = await page.pdf({
+          printBackground: true,
+          width: `${targetWidth}px`,
+          height: `${usedHeight}px`,
+          margin: { top: 0, right: 0, bottom: 0, left: 0 },
+          preferCSSPageSize: true,
+          pageRanges: "1",
+          displayHeaderFooter: false,
+          landscape: false,
+        })
+        buffer = Buffer.from(pdfBuffer)
+      } catch (e) {
+        // Fallback: PNG Screenshot -> PDF einbetten
+        const png = await page.screenshot({ type: 'png', fullPage: true }) as Buffer
+        const pdfDoc = await PDFDocument.create()
+        const page1 = pdfDoc.addPage([targetWidth, fullHeight])
+        const pngEmbed = await pdfDoc.embedPng(png)
+        page1.drawRectangle({ x: 0, y: 0, width: targetWidth, height: fullHeight, color: rgb(1,1,1) })
+        page1.drawImage(pngEmbed, { x: 0, y: 0, width: targetWidth, height: fullHeight })
+        const out = await pdfDoc.save()
+        buffer = Buffer.from(out)
+      }
+
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(buffer))
+          controller.close()
+        }
       })
-
-      return new NextResponse(Buffer.from(pdfBuffer), {
+      return new NextResponse(stream as unknown as BodyInit, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
