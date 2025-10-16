@@ -54,13 +54,28 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
 
     // 3. Extrahiere Text aus der Datei
     console.log("🔍 Extrahiere Text aus Datei...")
+    console.log("📎 Dateidetails:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    })
+    
     let cvText = ""
 
     try {
       cvText = await extractTextFromFile(file)
       console.log("✅ Text extrahiert. Länge:", cvText.length, "Zeichen")
+      console.log("📄 Erste 300 Zeichen des extrahierten Texts:", cvText.substring(0, 300))
+      
+      if (cvText.length < 100) {
+        console.warn("⚠️ WARNUNG: Sehr wenig Text extrahiert - möglicherweise Problem mit Datei oder Encoding")
+      }
     } catch (extractError: any) {
       console.error("❌ Fehler bei Text-Extraktion:", extractError)
+      console.error("❌ Error-Details:", {
+        message: extractError?.message,
+        stack: extractError?.stack?.substring(0, 200),
+      })
       
       // Wenn Extraktion fehlschlägt: Versuche Minimalprofil
       if (cvText.trim().length < 50) {

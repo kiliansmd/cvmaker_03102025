@@ -52,5 +52,14 @@ async function extractTextFromPDF(buffer: Buffer): Promise<string> {
 
 async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
   const result = await mammoth.extractRawText({ buffer })
-  return result.value
+  const text = result.value
+  
+  console.log(`📄 DOCX-Text extrahiert: ${text.length} Zeichen`)
+  console.log(`📄 Erste 200 Zeichen: ${text.substring(0, 200)}`)
+  
+  if (text.length < 100) {
+    console.warn('⚠️ Sehr wenig Text extrahiert - möglicherweise Problem mit Datei')
+  }
+  
+  return text
 }

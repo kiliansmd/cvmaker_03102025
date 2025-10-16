@@ -78,8 +78,12 @@ class OpenAIClient {
       let parsed: any
       try {
         parsed = JSON.parse(content)
-        console.log('📊 OpenAI Response erhalten:', JSON.stringify(parsed, null, 2).substring(0, 500))
+        console.log('📊 ===== OpenAI RAW RESPONSE =====')
+        console.log(JSON.stringify(parsed, null, 2))
+        console.log('📊 ===== END RAW RESPONSE =====')
       } catch (parseError) {
+        console.error('❌ JSON Parse Error:', parseError)
+        console.error('❌ Content:', content)
         throw new OpenAIError(
           ErrorCode.OPENAI_INVALID_RESPONSE,
           'OpenAI-Antwort ist kein valides JSON',
@@ -89,10 +93,19 @@ class OpenAIClient {
 
       // Normalisiere Response
       const normalized = this.normalizeOpenAIResponse(parsed)
-      console.log('🔄 Normalisierte Daten:', {
+      console.log('🔄 ===== NORMALISIERTE DATEN =====')
+      console.log('Experience:', JSON.stringify(normalized.experience, null, 2))
+      console.log('Skills:', JSON.stringify(normalized.skills, null, 2))
+      console.log('Education:', JSON.stringify(normalized.education, null, 2))
+      console.log('Certifications:', normalized.certifications)
+      console.log('Summary:', normalized.summary)
+      console.log('ExperienceYears:', normalized.experienceYears)
+      console.log('🔄 ===== END NORMALISIERTE DATEN =====')
+      console.log('📊 Counts:', {
         experienceCount: normalized.experience?.length || 0,
         skillsCount: normalized.skills?.technical?.length || 0,
         educationCount: normalized.education?.length || 0,
+        certificationsCount: normalized.certifications?.length || 0,
       })
 
       // Validiere mit Zod-Schema (sanft - mit safeParse)
