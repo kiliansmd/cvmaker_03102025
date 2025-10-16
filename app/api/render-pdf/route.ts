@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { PDFDocument, rgb } from "pdf-lib"
 
 // POST /api/render-pdf
 // Body: { url?: string; html?: string; width?: number }
@@ -100,13 +99,14 @@ export async function POST(req: Request) {
         })
         buffer = Buffer.from(pdfBuffer)
       } catch (e) {
-        // Fallback: PNG Screenshot -> PDF einbetten
+        // Fallback: PNG Screenshot -> PDF einbetten (dynamischer Import)
         const png = await page.screenshot({ type: 'png', fullPage: true }) as Buffer
+        const { PDFDocument, rgb }: any = await import('pdf-lib')
         const pdfDoc = await PDFDocument.create()
-        const page1 = pdfDoc.addPage([targetWidth, fullHeight])
+        const page1 = pdfDoc.addPage([targetWidth, usedHeight])
         const pngEmbed = await pdfDoc.embedPng(png)
-        page1.drawRectangle({ x: 0, y: 0, width: targetWidth, height: fullHeight, color: rgb(1,1,1) })
-        page1.drawImage(pngEmbed, { x: 0, y: 0, width: targetWidth, height: fullHeight })
+        page1.drawRectangle({ x: 0, y: 0, width: targetWidth, height: usedHeight, color: rgb(1,1,1) })
+        page1.drawImage(pngEmbed, { x: 0, y: 0, width: targetWidth, height: usedHeight })
         const out = await pdfDoc.save()
         buffer = Buffer.from(out)
       }
