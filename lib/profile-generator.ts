@@ -100,20 +100,21 @@ export function generateProfileFromParsedCV(
   // Prüfe ob wir echte CV-Daten haben
   const hasRealData = (parsedCV.experience || []).length > 0 || (parsedCV.skills?.technical || []).length > 0
   
+  // Positionszentrierte Zusammenfassung
   const profileSummary = hasRealData ? [
-    `${latestRole} mit ${parsedCV.experienceYears} relevanter Berufserfahrung. ${parsedCV.summary}`,
-    `Kernkompetenzen: ${topSkillsText}. ${
+    `${latestRole} mit ${parsedCV.experienceYears} einschlägiger Berufserfahrung. ${parsedCV.summary}`,
+    `Fachliche Schwerpunkte: ${topSkillsText}. ${
       parsedCV.experience?.[0] 
-        ? `Aktuelle Tätigkeit bei ${parsedCV.experience[0].company} als ${parsedCV.experience[0].title}.`
-        : `Projektpraxis bei führenden Unternehmen.`
+        ? `Derzeit tätig bei ${parsedCV.experience[0].company} in der Position ${parsedCV.experience[0].title}.`
+        : `Umfassende Praxiserfahrung in verschiedenen Projekten und Organisationen.`
     }`,
     `Arbeitsweise: ${
-      (parsedCV.skills?.soft || []).slice(0, 2).join(", ") || "analytisch, strukturiert und lösungsorientiert"
-    }. Fokus auf messbare Ergebnisse und nachhaltige Lösungen in enger Zusammenarbeit mit Stakeholdern.`,
+      (parsedCV.skills?.soft || []).slice(0, 2).join(", ") || "strukturiert, zielorientiert und teamfähig"
+    }. Schwerpunkt auf nachhaltige Ergebnisse und erfolgreiche Zusammenarbeit mit allen Stakeholdern.`,
   ] : [
-    `${formData.position} mit fundierter Ausbildung und praktischer Erfahrung.`,
-    `Motiviert, neue Herausforderungen anzunehmen und kontinuierlich zu lernen.`,
-    `Zuverlässige und engagierte Arbeitsweise mit Fokus auf Qualität und Teamarbeit.`,
+    `${formData.position} mit fundierter Qualifikation und praktischer Erfahrung im Fachgebiet.`,
+    `Motiviert für neue Herausforderungen mit Fokus auf kontinuierliche Weiterentwicklung und Qualität.`,
+    `Zuverlässige und engagierte Arbeitsweise mit ausgeprägter Team- und Kundenorientierung.`,
   ]
   
   console.log('📊 Profile Summary generiert:', profileSummary.length, 'Absätze')
@@ -243,42 +244,62 @@ export function generateProfileFromParsedCV(
   
   console.log('⏱️ Experience Timeline generiert:', experienceTimeline.length)
 
-  // Career Goals - basierend auf aktueller Position und Skills
+  // Career Goals - positionszentriert, branchenunabhängig, basierend auf tatsächlicher Rolle
   const currentRole = parsedCV.experience?.[0]?.title || formData.position
-  const topTwoSkills = (parsedCV.skills.technical || [])
+  const topTwoSkills = (parsedCV.skills?.technical || [])
     .slice(0, 2)
     .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .filter(s => s.length > 0)
     .join(" und ")
+  
+  // Intelligente Career Progression basierend auf aktueller Rolle
+  let advancedRole = currentRole
+  if (currentRole.includes('Junior')) {
+    advancedRole = currentRole.replace('Junior', '').trim() || currentRole
+  } else if (!currentRole.includes('Senior') && !currentRole.includes('Lead') && !currentRole.includes('Head')) {
+    advancedRole = `Senior ${currentRole}`
+  } else if (currentRole.includes('Senior')) {
+    advancedRole = `Lead ${currentRole.replace('Senior', '').trim()}`
+  } else {
+    advancedRole = `Expert ${currentRole}`
+  }
   
   const careerGoals = [
     {
-      title: currentRole.includes('Senior') || currentRole.includes('Lead') 
-        ? `Expert ${currentRole}` 
-        : `Senior ${currentRole}`,
-      description: `Weiterentwicklung mit vertiefter Expertise und strategischer Verantwortung für komplexe Projekte und technische Führung.`,
+      title: advancedRole,
+      description: `Weiterentwicklung zur nächsten Karrierestufe mit vertiefter Fachexpertise, strategischer Verantwortung und Führung anspruchsvoller Projekte.`,
       icon: null,
     },
     {
-      title: "Teamleitung / Management",
-      description: `Aufbau zur Teamleitung oder Management-Position mit Fokus auf Mitarbeiterentwicklung und strategische Planung.`,
+      title: "Führungsverantwortung",
+      description: `Übernahme von Team- oder Bereichsleitung mit Fokus auf Mitarbeiterentwicklung, strategische Planung und Verantwortung für Geschäftsergebnisse.`,
       icon: null,
     },
     {
-      title: "Spezialisierung",
+      title: "Fachliche Spezialisierung",
       description: topTwoSkills 
-        ? `Vertiefung der Expertise in ${topTwoSkills} für spezialisierte Beratungsdienstleistungen.`
-        : "Vertiefung der Fachexpertise für spezialisierte Projekte.",
+        ? `Vertiefung der Expertise in ${topTwoSkills} als anerkannte/r Spezialist/in und Thought Leader im Fachgebiet.`
+        : "Aufbau als anerkannte/r Expert/in und Spezialist/in im jeweiligen Fachbereich mit Vortrags- und Beratungstätigkeit.",
       icon: null,
     },
   ]
 
-  // Interests (aus Skills) - ohne Level-Klammern
-  const interests = (parsedCV.skills.technical || [])
-    .slice(0, 4)
+  // Interests (aus Skills + Soft Skills) - branchenunabhängig
+  const fachInterests = (parsedCV.skills?.technical || [])
+    .slice(0, 3)
     .map((skill) => ({
       name: skill.replace(/\s*\(.+?\)$/, ''), // Entferne Level-Info
       icon: null,
     }))
+  
+  const softInterests = (parsedCV.skills?.soft || [])
+    .slice(0, 2)
+    .map((skill) => ({
+      name: skill,
+      icon: null,
+    }))
+  
+  const interests = [...fachInterests, ...softInterests].slice(0, 5)
 
   // Personality Traits - kombiniere Erfahrung, Bildung und Skills
   const topThreeSkills = (parsedCV.skills.technical || [])
@@ -294,17 +315,31 @@ export function generateProfileFromParsedCV(
     ...((parsedCV.skills.soft || []).slice(0, 2)),
   ].filter((t): t is string => typeof t === 'string' && t.length > 0)
 
-  // Motivation Factors - basierend auf tatsächlichen Skills
-  const topTwoSkillsClean = (parsedCV.skills.technical || [])
+  // Motivation Factors - positionszentriert und branchenunabhängig
+  const topTwoSkillsClean = (parsedCV.skills?.technical || [])
     .slice(0, 2)
     .map(s => s.replace(/\s*\(.+?\)$/, ''))
+    .filter(s => s.length > 0)
     .join(" und ")
   
+  // Intelligente Motivation basierend auf Branche/Position
+  const position = (parsedCV.experience?.[0]?.title || formData.position).toLowerCase()
+  let primaryMotivation = topTwoSkillsClean 
+    ? `Arbeit mit ${topTwoSkillsClean} und Weiterentwicklung der fachlichen Expertise`
+    : "Anwendung und Vertiefung der fachlichen Kompetenzen"
+  
+  let secondaryMotivation = "Entwicklung nachhaltiger Lösungen und Optimierung von Prozessen"
+  if (position.includes('manager') || position.includes('leiter') || position.includes('lead')) {
+    secondaryMotivation = "Führung und Entwicklung von Teams sowie strategische Projektverantwortung"
+  } else if (position.includes('berater') || position.includes('consultant')) {
+    secondaryMotivation = "Beratung von Kunden und Implementierung erfolgreicher Lösungen"
+  }
+  
   const motivationFactors = [
-    topTwoSkillsClean ? `Arbeit mit ${topTwoSkillsClean}` : "Arbeit mit modernen Technologien",
-    "Entwicklung und Optimierung komplexer Systeme",
-    "Kontinuierliche Weiterbildung in zukunftsweisenden Technologien",
-    "Zusammenarbeit in interdisziplinären Teams",
+    primaryMotivation,
+    secondaryMotivation,
+    "Kontinuierliche berufliche Weiterentwicklung und Erweiterung des Kompetenzprofils",
+    "Erfolgreiche Zusammenarbeit in professionellen Teams und mit verschiedenen Stakeholdern",
   ].filter(m => m && m.length > 0)
 
   // Verwende die aktuellste Rolle aus dem CV, falls vorhanden, sonst Formular-Input
@@ -384,19 +419,19 @@ function generateTopSkills(parsedCV: ParsedCV): Array<{
     })
   }
 
-  // Skill 2: Top 3 Technische Skills (ohne Level-Klammern für Anzeige)
+  // Skill 2: Top 3-4 Fachkompetenzen (branchenunabhängig)
   if ((parsedCV.skills?.technical || []).length > 0) {
-    const topTechSkills = (parsedCV.skills.technical || [])
-      .slice(0, 3)
+    const topFachSkills = (parsedCV.skills.technical || [])
+      .slice(0, 4)
       .map(s => s.replace(/\s*\(.+?\)$/, '')) // Entferne Level für Anzeige
       .filter(s => s.length > 0)
       .join(", ")
     
-    if (topTechSkills) {
+    if (topFachSkills) {
       topSkills.push({
         id: "2",
-        name: "Technische Expertise",
-        description: `Umfassende Kenntnisse in ${topTechSkills} mit nachgewiesener Projekterfahrung und ${parsedCV.experienceYears} praktischer Anwendung.`,
+        name: "Fachliche Expertise",
+        description: `Fundierte Kenntnisse in ${topFachSkills} mit nachgewiesener Praxiserfahrung aus ${parsedCV.experienceYears} erfolgreicher beruflicher Tätigkeit.`,
         icon: null,
       })
     }

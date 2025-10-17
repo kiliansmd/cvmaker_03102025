@@ -241,8 +241,9 @@ KRITISCHE AUFGABE:
 Extrahiere ALLE Informationen aus dem Lebenslauf mit HÖCHSTER PRÄZISION. Achte besonders auf:
 - EXAKTE Jobtitel (nicht interpretieren oder umschreiben)
 - KLARE Trennung zwischen Position/Rolle und Verantwortlichkeiten
-- VOLLSTÄNDIGE Skill-Listen (ALLE erwähnten Technologien/Tools)
+- VOLLSTÄNDIGE Skill-Listen (ALLE erwähnten Fähigkeiten, Kompetenzen, Tools, Methoden)
 - KORREKTE zeitliche Einordnung
+- BRANCHENSPEZIFISCHE Terminologie beibehalten
 
 ANTWORT-FORMAT (STRIKT EINHALTEN):
 Antworte NUR mit validem JSON in diesem EXAKTEN Format:
@@ -278,17 +279,20 @@ Antworte NUR mit validem JSON in diesem EXAKTEN Format:
   ],
   "skills": {
     "technical": [
-      "Jedes einzelne Tool/Technologie im Format 'Name (Level)'",
-      "Beispiele: 'SAP HCM (Experte)', 'Python (Sehr gut)', 'Docker (Gut)', 'Git (Grundkenntnisse)'",
-      "Level basiert auf Kontext: Jahre Erfahrung, Projektanzahl, Zertifikate"
+      "ALLE fachlichen Kompetenzen, Tools, Technologien, Methoden, Systeme im Format 'Name (Level)'",
+      "IT-Beispiele: 'SAP HCM (Experte)', 'Python (Sehr gut)', 'Agile Methoden (Gut)'",
+      "Non-IT-Beispiele: 'Vertragsverhandlung (Experte)', 'Change Management (Sehr gut)', 'Budgetplanung (Gut)'",
+      "Beratung: 'Strategieberatung (Experte)', 'Prozessoptimierung (Sehr gut)'",
+      "Handwerk: 'CNC-Programmierung (Experte)', 'Qualitätssicherung (Sehr gut)'",
+      "Level basiert auf: Jahre Erfahrung, Projektanzahl, Zertifikate, Verantwortungsbereich"
     ],
     "soft": [
-      "Explizit genannte Soft Skills",
-      "Aus Beschreibungen ableitbar (z.B. 'Teamleitung' → 'Führungskompetenz')"
+      "ALLE Soft Skills und überfachliche Kompetenzen",
+      "Explizit genannt ODER aus Kontext ableitbar",
+      "Beispiele: 'Führungskompetenz', 'Verhandlungsgeschick', 'Kundenorientierung', 'Analytisches Denken'"
     ],
     "languages": [
-      {"language": "Deutsch", "level": "Muttersprache / C2 / C1 / B2 / B1 / A2 / A1"},
-      {"language": "Englisch", "level": "Verwende CEFR oder Beschreibung wie 'Fließend', 'Verhandlungssicher'"}
+      {"language": "Sprache", "level": "Muttersprache / C2 / C1 / B2 / B1 / A2 / A1 / Fließend / Verhandlungssicher / Grundkenntnisse"}
     ]
   },
   "certifications": [
@@ -313,14 +317,21 @@ KRITISCHE PARSING-REGELN:
    ✅ responsibilities = Was die Person TAT (Tätigkeiten)
    ✅ NIEMALS in title: "Entwicklung von...", "Beratung für..." → Das gehört in responsibilities
 
-3. SKILLS-EXTRAKTION:
-   ✅ Extrahiere JEDES genannte Tool, jede Technologie, jede Methodik
+3. SKILLS-EXTRAKTION (BRANCHENUNABHÄNGIG):
+   ✅ Extrahiere JEDE genannte Fähigkeit, Kompetenz, Tool, Methode, System
+   ✅ Funktioniert für ALLE Branchen:
+      - IT: Software, Frameworks, Programmiersprachen
+      - Beratung: Methoden, Frameworks, Branchen-Know-how
+      - Management: Führungsmethoden, Tools, Prozesse
+      - Handwerk: Maschinen, Techniken, Materialien
+      - Medizin: Verfahren, Geräte, Spezialisierungen
+      - Marketing: Plattformen, Strategien, Analytics
    ✅ Schätze Level basierend auf:
-      - Anzahl Jahre Nutzung
-      - Anzahl Projekte damit
+      - Anzahl Jahre Anwendung
+      - Anzahl Projekte/Einsätze
       - Vorhandene Zertifikate
-      - Position/Seniority
-   ✅ Format: "Toolname (Level)" z.B. "SAP SuccessFactors (Experte)"
+      - Position/Verantwortung
+   ✅ Format: "Kompetenz (Level)" z.B. "Vertragsverhandlung (Experte)", "Change Management (Sehr gut)"
 
 4. EXPERIENCE-YEARS:
    ✅ Berechne TOTAL über ALLE Positionen
@@ -340,26 +351,46 @@ KRITISCHE PARSING-REGELN:
 
 BEISPIEL KORREKT vs. FALSCH:
 
-❌ FALSCH:
+❌ FALSCH (IT-Beispiel):
 {
   "experience": [{
-    "title": "Entwicklung von Web-Anwendungen",  ← Das ist eine Tätigkeit, kein Titel!
-    "company": "Tech GmbH",
+    "title": "Entwicklung von Web-Anwendungen",  ← Tätigkeit, kein Titel!
     "responsibilities": ["Frontend", "Backend"]  ← Zu vage
   }]
 }
 
-✅ KORREKT:
+✅ KORREKT (IT-Beispiel):
 {
   "experience": [{
     "title": "Senior Full-Stack Developer",  ← Exakter Jobtitel
     "company": "Tech GmbH",
-    "description": "Entwicklung unternehmenskritischer Web-Anwendungen im E-Commerce-Bereich",
+    "description": "Entwicklung unternehmenskritischer Web-Anwendungen",
     "responsibilities": [
-      "Entwicklung von React-Frontend-Komponenten mit TypeScript",
-      "Implementierung von REST-APIs mit Node.js und Express",
-      "Datenbank-Design und -Optimierung (PostgreSQL)",
-      "Code-Reviews und Mentoring von Junior-Entwicklern"
+      "Entwicklung von React-Frontend-Komponenten",
+      "Implementierung von REST-APIs mit Node.js",
+      "Code-Reviews und Mentoring"
+    ]
+  }]
+}
+
+❌ FALSCH (Beratung-Beispiel):
+{
+  "experience": [{
+    "title": "Beratung von Kunden",  ← Tätigkeit!
+    "responsibilities": ["Analyse", "Empfehlungen"]  ← Zu vage
+  }]
+}
+
+✅ KORREKT (Beratung-Beispiel):
+{
+  "experience": [{
+    "title": "Senior Management Consultant",  ← Exakter Titel
+    "company": "Beratung AG",
+    "description": "Strategieberatung für mittelständische Unternehmen",
+    "responsibilities": [
+      "Durchführung von Unternehmensanalysen und Potenzialstudien",
+      "Entwicklung von Transformationsstrategien",
+      "Change Management und Stakeholder-Kommunikation"
     ]
   }]
 }
@@ -381,24 +412,32 @@ KEINE ERFINDUNGEN:
    * User-Prompt mit CV-Text und optionalen Zusatzinfos
    */
   private buildUserPrompt(cvText: string, additionalInfo?: string): string {
-    let prompt = `Analysiere den folgenden Lebenslauf VOLLSTÄNDIG und PRÄZISE.
+    let prompt = `Analysiere den folgenden Lebenslauf VOLLSTÄNDIG, PRÄZISE und BRANCHENUNABHÄNGIG.
 
-WICHTIG: 
-- Übernimm Jobtitel EXAKT wie angegeben (nicht umschreiben!)
-- Extrahiere ALLE Skills und Technologien
+KRITISCHE ANFORDERUNGEN:
+- Übernimm Jobtitel EXAKT wie im CV angegeben (nicht umschreiben oder "verbessern")
+- Extrahiere ALLE Fähigkeiten, Kompetenzen, Tools, Methoden (nicht nur IT/Technologie)
 - Unterscheide klar zwischen Position (title) und Tätigkeiten (responsibilities)
+- Behalte branchenspezifische Terminologie bei
+- Erkenne Soft Skills aus Beschreibungen und Führungsrollen
 
 LEBENSLAUF:
 ${cvText}`
 
     if (additionalInfo && additionalInfo.trim()) {
-      prompt += `\n\n--- ZUSÄTZLICHER KONTEXT ---
+      prompt += `\n\n--- ZUSÄTZLICHER KONTEXT / ZIELPOSITION ---
 ${additionalInfo}
 
-Nutze diese Informationen zur Ergänzung und besseren Einordnung der CV-Daten.`
+WICHTIG: Nutze diese Informationen zur:
+- Besseren Einordnung der Relevanz von Skills
+- Optimierung der Darstellung für die Zielposition
+- Hervorhebung relevanter Erfahrungen
+- ABER: Erfinde KEINE Informationen die nicht im CV stehen!`
     }
 
-    prompt += `\n\nExtrahiere nun ALLE Informationen als strukturiertes JSON gemäß dem vorgegebenen Format.`
+    prompt += `\n\n--- AUFTRAG ---
+Extrahiere nun ALLE Informationen als vollständig strukturiertes JSON gemäß dem vorgegebenen Format.
+Achte besonders auf VOLLSTÄNDIGKEIT und GENAUIGKEIT der Jobtitel und Fachkompetenzen.`
 
     return prompt
   }

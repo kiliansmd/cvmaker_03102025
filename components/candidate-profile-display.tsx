@@ -315,9 +315,9 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   onChange?.({ ...candidateData, education: next })
                 }}>{(candidateData.education || [])[0] || "–"}</div>
               </div>
-              {/* Top Skills */}
+              {/* Top Kompetenzen */}
               <div>
-                <div className="ui-muted text-sm mb-1">Top Skills</div>
+                <div className="ui-muted text-sm mb-1">Kernkompetenzen</div>
                 <div className="flex flex-wrap gap-2">
                   {(candidateData.itSkills || []).slice(0,3).map((s: any, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
@@ -329,9 +329,9 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                   ))}
                 </div>
               </div>
-              {/* Top Tools */}
+              {/* Top Stärken */}
               <div>
-                <div className="ui-muted text-sm mb-1">Top Tools</div>
+                <div className="ui-muted text-sm mb-1">Besondere Stärken</div>
                 <div className="flex flex-wrap gap-2">
                   {(candidateData.topSkills || []).slice(0,3).map((t: any, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
@@ -415,9 +415,9 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
           )}
           </div>
 
-          {/* Kernkompetenzen */}
+          {/* Fachkompetenzen */}
           <div className="ui-card p-6">
-            <h2 className="ui-section-title text-xl mb-4">Kernkompetenzen</h2>
+            <h2 className="ui-section-title text-xl mb-4">Fachkompetenzen</h2>
             <div className="divide-y divide-slate-200 rounded-[var(--radius)] overflow-hidden border border-slate-200">
               {(candidateData.itSkills || []).map((s: any, idx: number) => (
                 <div key={idx} className="grid grid-cols-3 bg-white group">
