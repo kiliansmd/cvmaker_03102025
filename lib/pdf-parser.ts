@@ -10,25 +10,36 @@ import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 pdfjsLib.GlobalWorkerOptions.workerSrc = undefined
 
 function toUint8(input: Buffer | Uint8Array | ArrayBuffer): Uint8Array {
-  // Bereits korrekt
-  if (input instanceof Uint8Array) return input
-  // ArrayBuffer → Uint8Array
-  if (typeof ArrayBuffer !== 'undefined' && input instanceof ArrayBuffer) return new Uint8Array(input)
-  // Node Buffer → Uint8Array (unter Beibehaltung von Offset/Length)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const maybeBuf = input as any
-  if (typeof Buffer !== 'undefined' && maybeBuf && maybeBuf.constructor && maybeBuf.constructor.name === 'Buffer') {
-    const b = maybeBuf as Buffer
-    return new Uint8Array(b.buffer, b.byteOffset, b.byteLength)
+  // Bereits Uint8Array → direkt zurückgeben
+  if (input instanceof Uint8Array) {
+    console.log('✅ Input ist bereits Uint8Array')
+    return input
   }
-  // Fallback – letzter Versuch über Kopie
+  
+  // ArrayBuffer → Uint8Array
+  if (typeof ArrayBuffer !== 'undefined' && input instanceof ArrayBuffer) {
+    console.log('✅ Konvertiere ArrayBuffer zu Uint8Array')
+    return new Uint8Array(input)
+  }
+  
+  // Node Buffer → Uint8Array
+  // WICHTIG: In Production/Server-Context ist Buffer verfügbar
+  if (Buffer.isBuffer(input)) {
+    console.log('✅ Konvertiere Node Buffer zu Uint8Array')
+    // Erstelle eine NEUE Uint8Array-Kopie (wichtiger für pdfjs-dist)
+    const uint8 = new Uint8Array(input.length)
+    for (let i = 0; i < input.length; i++) {
+      uint8[i] = input[i]
+    }
+    return uint8
+  }
+  
+  // Fallback für andere Typen
+  console.warn('⚠️ Unbekannter Input-Typ, versuche direkte Konvertierung')
   try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    return new Uint8Array(maybeBuf)
-  } catch {
-    throw new Error('Unsupported binary input – expected Uint8Array/ArrayBuffer/Buffer')
+    return new Uint8Array(input as any)
+  } catch (error) {
+    throw new Error(`Unsupported binary input type: ${typeof input}. Expected Uint8Array, ArrayBuffer, or Buffer.`)
   }
 }
 

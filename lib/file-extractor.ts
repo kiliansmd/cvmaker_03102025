@@ -36,35 +36,27 @@ export async function extractTextFromFile(file: File): Promise<string> {
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     const { extractTextFromPDF } = await import('./pdf-parser')
-    const text = await extractTextFromPDF(buffer)
+    
+    // Konvertiere Buffer zu Uint8Array für pdfjs-dist (wichtig für Production!)
+    const uint8Array = new Uint8Array(buffer)
+    const text = await extractTextFromPDF(uint8Array)
+    
     console.log(`✅ PDF-Text extrahiert: ${text.length} Zeichen`)
     
     if (text.length < 100) {
       console.warn('⚠️ PDF-Extraktion lieferte sehr wenig Text - möglicherweise gescanntes PDF')
       console.warn('⚠️ Extrahierter Text:', text)
+      throw new Error(`PDF enthält zu wenig Text (${text.length} Zeichen). Möglicherweise gescanntes PDF ohne Text-Layer. Bitte DOCX verwenden.`)
     }
     
     return text
   } catch (error) {
     console.error('❌ PDF-Parsing-Fehler:', error)
-    console.warn('⚠️ Versuche Fallback: UTF-8 decode')
-    
-    try {
-      const text = buffer.toString('utf-8')
-      const cleaned = text.replace(/[^\x20-\x7E\n\r\täöüÄÖÜß]/g, ' ').trim()
-      
-      if (cleaned.length < 50) {
-        throw new Error(`PDF-Fallback lieferte nur ${cleaned.length} Zeichen. Bitte DOCX verwenden.`)
-      }
-      
-      console.log(`✅ PDF-Fallback erfolgreich: ${cleaned.length} Zeichen`)
-      return cleaned
-    } catch (fallbackError) {
-      console.error('❌ PDF-Fallback fehlgeschlagen:', fallbackError)
-      throw new Error(
-        'PDF konnte nicht verarbeitet werden (möglicherweise gescanntes PDF ohne Text-Layer). Bitte versuchen Sie es mit einer DOCX-Datei.',
-      )
-    }
+    // KEIN UTF-8-Fallback mehr - das erzeugt nur Müll!
+    // Stattdessen: Klare Fehlermeldung
+    throw new Error(
+      'PDF konnte nicht verarbeitet werden. Mögliche Gründe: Gescanntes PDF ohne Text-Layer, verschlüsseltes PDF, oder beschädigte Datei. Bitte versuchen Sie es mit einer DOCX-Datei für beste Ergebnisse.',
+    )
   }
 }
 
