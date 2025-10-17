@@ -21,6 +21,7 @@ function validateEnvironment(): Environment {
       OPENAI_MODEL: process.env.OPENAI_MODEL,
       NODE_ENV: process.env.NODE_ENV,
       PUPPETEER_EXECUTABLE_PATH: process.env.PUPPETEER_EXECUTABLE_PATH,
+      BACKGROUND_AGENT_KEY: process.env.BACKGROUND_AGENT_KEY,
     })
 
     // Runtime-Validierung nur wenn NICHT im Build-Prozess
@@ -38,6 +39,7 @@ function validateEnvironment(): Environment {
         OPENAI_MODEL: 'gpt-4o-mini',
         NODE_ENV: (process.env.NODE_ENV as any) || 'production',
         PUPPETEER_EXECUTABLE_PATH: undefined,
+        BACKGROUND_AGENT_KEY: undefined,
       }
     }
     

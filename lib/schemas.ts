@@ -228,6 +228,8 @@ export const EnvironmentSchema = z.object({
   OPENAI_MODEL: z.string().optional().default('gpt-4o-mini'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PUPPETEER_EXECUTABLE_PATH: z.string().optional(),
+  // Optional: Background-Agent Key (z.B. für externe Worker-Dienste)
+  BACKGROUND_AGENT_KEY: z.string().optional(),
 })
 
 export type Environment = z.infer<typeof EnvironmentSchema>
