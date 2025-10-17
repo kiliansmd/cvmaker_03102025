@@ -1,6 +1,6 @@
 "use server"
 
-import { extractTextFromFile } from "@/lib/file-extractor"
+import { extractTextFromFile, sanitizeExtractedText } from "@/lib/file-extractor"
 import { parseCVWithAI } from "@/lib/cv-parser"
 import { generateProfileFromParsedCV } from "@/lib/profile-generator"
 import { validateFileOrThrow } from "@/lib/file-validator"
@@ -63,7 +63,8 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
     let cvText = ""
 
     try {
-      cvText = await extractTextFromFile(file)
+      const rawText = await extractTextFromFile(file)
+      cvText = sanitizeExtractedText(rawText, { maxChars: 160_000 })
       console.log("✅ Text extrahiert. Länge:", cvText.length, "Zeichen")
       console.log("📄 Erste 300 Zeichen des extrahierten Texts:", cvText.substring(0, 300))
       
@@ -103,7 +104,7 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
     }
 
     console.log("🤖 Starte OpenAI CV-Parsing...")
-    console.log(`📊 CV-Text-Länge: ${cvText.length} Zeichen`)
+    console.log(`📊 CV-Text-Länge (bereinigt): ${cvText.length} Zeichen`)
     console.log(`📊 Erste 500 Zeichen des CV-Texts:\n${cvText.substring(0, 500)}\n`)
     
     try {

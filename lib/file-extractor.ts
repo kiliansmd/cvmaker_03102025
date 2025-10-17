@@ -81,3 +81,36 @@ async function extractTextFromDOCX(buffer: Buffer): Promise<string> {
   
   return text
 }
+
+/**
+ * Bereinigt und kürzt extrahierten Text, um Token-Limits einzuhalten.
+ * - Entfernt Steuerzeichen
+ * - Komprimiert Whitespaces
+ * - Entfernt ultralange Wiederholungen
+ * - Kürzt auf eine sichere Länge für OpenAI-Requests
+ */
+export function sanitizeExtractedText(
+  rawText: string,
+  options: { maxChars?: number } = {}
+): string {
+  const maxChars = options.maxChars ?? 160_000 // ~40k Tokens grob
+  if (!rawText) return ''
+
+  // Entferne nicht druckbare Zeichen (außer gängige Umlaute)
+  let text = rawText.replace(/[\u0000-\u001F\u007F]+/g, ' ')
+
+  // Entferne extrem lange Wiederholungen desselben Zeichens
+  text = text.replace(/(.)\1{9,}/g, '$1$1$1')
+
+  // Komprimiere Whitespaces
+  text = text.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n')
+
+  // Harte Kürzung, falls zu lang: behalte Anfang und Ende
+  if (text.length > maxChars) {
+    const head = text.slice(0, Math.floor(maxChars * 0.6))
+    const tail = text.slice(-Math.floor(maxChars * 0.4))
+    text = `${head}\n\n... [gekürzt – bitte DOCX hochladen für präziseres Parsing] ...\n\n${tail}`
+  }
+
+  return text.trim()
+}
