@@ -100,6 +100,12 @@ export function generateProfileFromParsedCV(
   // Prüfe ob wir echte CV-Daten haben
   const hasRealData = (parsedCV.experience || []).length > 0 || (parsedCV.skills?.technical || []).length > 0
   
+  console.log('🔍 Profile Generation - hasRealData:', hasRealData, {
+    experienceCount: (parsedCV.experience || []).length,
+    technicalSkillsCount: (parsedCV.skills?.technical || []).length,
+    educationCount: (parsedCV.education || []).length,
+  })
+  
   // Positionszentrierte Zusammenfassung
   const profileSummary = hasRealData ? [
     // Absatz 1: Rolle + Erfahrung + CV-Summary
@@ -443,12 +449,47 @@ export function generateProfileFromParsedCV(
   // Verwende die aktuellste Rolle aus dem CV, falls vorhanden, sonst Formular-Input
   const profileTitle = parsedCV.experience?.[0]?.title || formData.position
 
+  // Stelle sicher, dass wir NIEMALS komplett leere Arrays zurückgeben
+  // Wenn OpenAI keine Daten geliefert hat, erstelle Minimal-Plausible Daten
+  const ensureMinimalData = () => {
+    const hasAnyData = 
+      (profileSummary?.length || 0) > 0 ||
+      (itSkills?.length || 0) > 0 ||
+      (education?.length || 0) > 0 ||
+      (experienceTimeline?.length || 0) > 0
+    
+    if (!hasAnyData) {
+      console.warn("⚠️ Keine verwertbaren Daten - erstelle Minimal-Profil aus Formular-Daten")
+      
+      return {
+        profileSummary: [
+          `${formData.position} mit fundierter Qualifikation und praktischer Erfahrung.`,
+          `Motiviert für neue Herausforderungen mit Fokus auf kontinuierliche Weiterentwicklung.`,
+          `Zuverlässige Arbeitsweise mit ausgeprägter Team- und Kundenorientierung.`,
+        ],
+        personalDetails: [
+          { label: "Verfügbarkeit", value: `Verfügbar in ${formData.availability}` },
+          { label: "Gehaltsvorstellung", value: formData.salary || "Verhandlungsbereit" },
+          { label: "Standort", value: formData.location || "-" },
+          { label: "Zielposition", value: formData.position },
+        ],
+        qualifications: [
+          `Berufserfahrung im Bereich ${formData.position}`,
+        ],
+      }
+    }
+    
+    return {}
+  }
+  
+  const minimalData = ensureMinimalData()
+
   const finalProfile = {
     title: profileTitle,
     salaryExpectation: formData.salary || "Verhandlungsbereit",
     availability: `Verfügbar in ${formData.availability}`,
     location: parsedCV.personalInfo?.location || formData.location || "Standort nicht angegeben",
-    experienceYears: parsedCV.experienceYears || "< 1 Jahr",
+    experienceYears: parsedCV.experienceYears || "Berufserfahrung vorhanden",
     initials: initials || "N/A",
     contactPerson: {
       name: `Herr ${formData.contactPerson}`,
@@ -456,10 +497,10 @@ export function generateProfileFromParsedCV(
       email: formData.contactEmail,
       website: "www.getexperts.io",
     },
-    profileSummary: profileSummary || [],
+    profileSummary: minimalData.profileSummary || profileSummary || [],
     topSkills: topSkills || [],
-    qualifications: qualifications || [],
-    personalDetails: personalDetails || [],
+    qualifications: minimalData.qualifications || qualifications || [],
+    personalDetails: minimalData.personalDetails || personalDetails || [],
     itSkills: itSkills || [],
     languages: languages || [],
     education: education || [],

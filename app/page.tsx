@@ -247,7 +247,6 @@ export default function HomePage() {
           }
         }
         
-        // Wenn Daten leer/unvollständig sind, mische Formularinfos rein
         const data = (result as any).data || {}
         
         console.log("📊 Received Data Arrays:", {
@@ -257,34 +256,78 @@ export default function HomePage() {
           education: data.education?.length || 0,
           experienceTimeline: data.experienceTimeline?.length || 0,
           topSkills: data.topSkills?.length || 0,
+          personalDetails: data.personalDetails?.length || 0,
+          qualifications: data.qualifications?.length || 0,
         })
         
+        // Prüfe Datenqualität
+        const hasMinimalData = 
+          (data.itSkills?.length || 0) > 0 ||
+          (data.experienceTimeline?.length || 0) > 0 ||
+          (data.education?.length || 0) > 0 ||
+          (data.profileSummary?.length || 0) > 0
+        
+        if (!hasMinimalData) {
+          console.warn("⚠️ WARNUNG: Server hat nur sehr wenige Daten zurückgegeben!")
+          console.warn("⚠️ Mögliche Ursachen: PDF-Parsing fehlgeschlagen, OpenAI hat nichts extrahiert, oder Datei ist leer")
+        }
+        
+        // WICHTIG: Verwende ALLE Daten vom Server, auch leere Arrays
+        // Nur wenn ein Feld undefined/null ist, setze Fallback
         const normalized = {
-          ...data,
+          // Basis-Felder mit Fallback auf Formular-Daten
           title: data.title || formData.position,
           availability: data.availability || `Verfügbar in ${formData.availability}`,
           salaryExpectation: data.salaryExpectation || formData.salary,
           location: data.location || formData.location,
-          profileSummary: Array.isArray(data.profileSummary) && data.profileSummary.length > 0 ? data.profileSummary : [],
-          itSkills: Array.isArray(data.itSkills) && data.itSkills.length > 0 ? data.itSkills : [],
-          languages: Array.isArray(data.languages) && data.languages.length > 0 ? data.languages : [],
-          education: Array.isArray(data.education) && data.education.length > 0 ? data.education : [],
-          qualifications: Array.isArray(data.qualifications) && data.qualifications.length > 0 ? data.qualifications : [],
-          personalDetails: Array.isArray(data.personalDetails) && data.personalDetails.length > 0 ? data.personalDetails : [],
-          topSkills: Array.isArray(data.topSkills) && data.topSkills.length > 0 ? data.topSkills : [],
-          keyProjects: Array.isArray(data.keyProjects) && data.keyProjects.length > 0 ? data.keyProjects : [],
-          experienceTimeline: Array.isArray(data.experienceTimeline) && data.experienceTimeline.length > 0 ? data.experienceTimeline : [],
+          experienceYears: data.experienceYears || "Berufserfahrung vorhanden",
+          initials: data.initials || formData.name.split(' ').map(p => p[0]).join(''),
+          contactPerson: data.contactPerson || {
+            name: formData.contactPerson,
+            phone: formData.contactPhone,
+            email: formData.contactEmail,
+            website: "www.getexperts.io",
+          },
+          
+          // Arrays: Verwende Server-Daten wenn vorhanden, sonst leere Arrays
+          // NICHT auf [] zurückfallen wenn Server-Array existiert aber leer ist!
+          profileSummary: data.profileSummary || [],
+          itSkills: data.itSkills || [],
+          languages: data.languages || [],
+          education: data.education || [],
+          qualifications: data.qualifications || [],
+          personalDetails: data.personalDetails || [],
+          topSkills: data.topSkills || [],
+          keyProjects: data.keyProjects || [],
+          experienceTimeline: data.experienceTimeline || [],
+          careerGoals: data.careerGoals || [],
+          interests: data.interests || [],
+          personalityTraits: data.personalityTraits || [],
+          motivationFactors: data.motivationFactors || [],
         }
         
-        console.log("📊 Normalized Profile:", {
+        console.log("📊 Normalized Profile (FINAL):", {
           title: normalized.title,
           itSkills: normalized.itSkills.length,
           languages: normalized.languages.length,
           education: normalized.education.length,
+          experienceTimeline: normalized.experienceTimeline.length,
+          profileSummary: normalized.profileSummary.length,
+          personalDetails: normalized.personalDetails.length,
+          qualifications: normalized.qualifications.length,
         })
         
         // Schritt 3/4: Ziellayout mit Feldern + konvertierten Bildern rendern
-        setGeneratedProfile((prev: any) => ({ ...normalized, attachments }))
+        const finalProfile = { ...normalized, attachments }
+        
+        console.log("🎯 Setting Profile with attachments:", {
+          hasAttachments: attachments.length > 0,
+          attachmentCount: attachments.length,
+          totalFields: Object.keys(finalProfile).length,
+        })
+        
+        setGeneratedProfile(finalProfile)
+        
         // Vorschau nach oben und im Vollbild anzeigen
         if (typeof window !== 'undefined') {
           window.scrollTo({ top: 0, behavior: 'smooth' })

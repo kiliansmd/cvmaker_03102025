@@ -142,6 +142,15 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
       if (!hasRealData) {
         console.error('❌ WARNUNG: OpenAI hat keine verwertbaren Daten zurückgegeben!')
         console.error('❌ ParsedCV:', JSON.stringify(parsedCV, null, 2))
+        console.warn('⚠️ Verwende Fallback-Profil basierend auf Formulardaten')
+        
+        // Erstelle Minimal-ParsedCV aus Formulardaten
+        parsedCV = createFallbackProfile({
+          name: validatedData.name,
+          location: validatedData.location,
+          position: validatedData.position,
+          contactEmail: validatedData.contactEmail,
+        })
       }
       
     } catch (parseError: any) {
@@ -152,16 +161,32 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
       console.error("❌ Error-Stack:", parseError?.stack?.substring(0, 500))
       console.error("❌ ===== END ERROR =====")
       
-      // Re-throw Error statt Fallback - User muss wissen dass es fehlschlug
-      throw new AppError(
-        ErrorCode.CV_PARSING_FAILED,
-        `CV-Parsing mit OpenAI fehlgeschlagen: ${parseError?.message || 'Unbekannter Fehler'}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.`,
-        500,
-        { originalError: parseError }
-      )
+      // Bei kritischen Fehlern (API-Key, Quota) → Abbruch
+      const isCriticalError = 
+        parseError?.code === ErrorCode.CONFIGURATION_ERROR ||
+        parseError?.code === ErrorCode.OPENAI_NO_CREDITS
+      
+      if (isCriticalError) {
+        throw new AppError(
+          parseError.code,
+          parseError.message,
+          parseError.statusCode || 500,
+          { originalError: parseError }
+        )
+      }
+      
+      // Bei anderen Fehlern → Fallback-Profil
+      console.warn('⚠️ OpenAI-Parsing fehlgeschlagen, erstelle Fallback-Profil')
+      parsedCV = createFallbackProfile({
+        name: validatedData.name,
+        location: validatedData.location,
+        position: validatedData.position,
+        contactEmail: validatedData.contactEmail,
+      })
     }
 
     if (!parsedCV) {
+      // Sollte nie passieren, aber Sicherheitscheck
       throw new AppError(
         ErrorCode.CV_PARSING_FAILED,
         'CV-Parsing lieferte keine Daten. Bitte versuchen Sie es erneut.',

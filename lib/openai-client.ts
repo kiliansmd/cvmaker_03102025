@@ -142,6 +142,26 @@ class OpenAIClient {
         certificationsCount: normalized.certifications?.length || 0,
       })
 
+      // Prüfe ob wir überhaupt verwertbare Daten haben
+      const hasUsefulData = 
+        (normalized.experience?.length || 0) > 0 ||
+        (normalized.skills?.technical?.length || 0) > 0 ||
+        (normalized.education?.length || 0) > 0 ||
+        (normalized.summary && normalized.summary.length > 10)
+      
+      if (!hasUsefulData) {
+        console.error('❌ KRITISCH: OpenAI hat KEINE verwertbaren Daten zurückgegeben!')
+        console.error('❌ Normalized Data:', JSON.stringify(normalized, null, 2))
+        console.error('❌ Original OpenAI Response:', JSON.stringify(parsed, null, 2))
+        
+        // Werfe Fehler statt leere Daten zurückzugeben
+        throw new OpenAIError(
+          ErrorCode.OPENAI_INVALID_RESPONSE,
+          'OpenAI konnte keine verwertbaren Daten aus dem CV extrahieren. Möglicherweise ist der CV-Text zu kurz, fehlerhaft formatiert, oder die Datei enthält hauptsächlich Bilder.',
+          { normalized, rawResponse: parsed }
+        )
+      }
+      
       // Validiere mit Zod-Schema (sanft - mit safeParse)
       const validationResult = ParsedCVSchema.safeParse(normalized)
       
@@ -151,6 +171,7 @@ class OpenAIClient {
         return normalized as ParsedCV
       }
       
+      console.log('✅ Zod-Validierung erfolgreich - Daten sind strukturell korrekt')
       return validationResult.data
     } catch (error: any) {
       // Klassifiziere und re-throw als OpenAIError
