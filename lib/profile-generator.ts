@@ -134,7 +134,7 @@ export function generateProfileFromParsedCV(
     
     // Absatz 3: Soft Skills + Arbeitsweise
     (() => {
-      const softSkills = (parsedCV.skills?.soft || []).slice(0, 3).join(", ")
+      const softSkills = (parsedCV.skills?.soft || []).join(", ")
       if (softSkills.length > 0) {
         return `Arbeitsweise geprägt durch: ${softSkills}. Fokus auf nachhaltige Ergebnisse und erfolgreiche Zusammenarbeit mit allen Stakeholdern.`
       }

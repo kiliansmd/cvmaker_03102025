@@ -319,7 +319,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               <div>
                 <div className="ui-muted text-sm mb-1">Kernkompetenzen</div>
                 <div className="flex flex-wrap gap-2">
-                  {(candidateData.itSkills || []).slice(0,3).map((s: any, i: number) => (
+                  {(candidateData.itSkills || []).map((s: any, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                       if(!editable) return
                       const next=[...(candidateData.itSkills||[])]
@@ -333,7 +333,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               <div>
                 <div className="ui-muted text-sm mb-1">Besondere Stärken</div>
                 <div className="flex flex-wrap gap-2">
-                  {(candidateData.topSkills || []).slice(0,3).map((t: any, i: number) => (
+                  {(candidateData.topSkills || []).map((t: any, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                       if(!editable) return
                       const next=[...(candidateData.topSkills||[])]
@@ -347,7 +347,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
               <div>
                 <div className="ui-muted text-sm mb-1">Zertifikate</div>
                 <div className="flex flex-wrap gap-2">
-                  {(candidateData.qualifications || []).slice(0,3).map((q: string, i: number) => (
+                  {(candidateData.qualifications || []).map((q: string, i: number) => (
                     <span key={i} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs" contentEditable={editable} suppressContentEditableWarning onBlur={(e)=>{
                       if(!editable) return
                       const next=[...(candidateData.qualifications||[])]
@@ -585,7 +585,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
             <div className="ui-card p-6">
               <h2 className="ui-section-title text-xl mb-4">Schlüsselprojekte</h2>
               <div className="space-y-4">
-                {candidateData.keyProjects.slice(0, 4).map((p: any, idx: number) => (
+                {candidateData.keyProjects.map((p: any, idx: number) => (
                   <div key={p.id || idx} className="rounded-[var(--radius)] border border-slate-200 p-4">
                     <div
                       className="font-medium"
@@ -628,7 +628,7 @@ export default function CandidateProfileDisplay({ profileData, editable = false,
                     </p>
                     {Array.isArray(p.tags) && p.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {p.tags.slice(0, 4).map((t: string, idx: number) => (
+                        {p.tags.map((t: string, idx: number) => (
                           <span key={idx} className="px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-xs">
                             {t}
                           </span>
