@@ -17,30 +17,27 @@ function toUint8(input: Buffer | Uint8Array | ArrayBuffer): Uint8Array {
   }
   
   // ArrayBuffer → Uint8Array
-  if (typeof ArrayBuffer !== 'undefined' && input instanceof ArrayBuffer) {
+  if (input instanceof ArrayBuffer) {
     console.log('✅ Konvertiere ArrayBuffer zu Uint8Array')
     return new Uint8Array(input)
   }
   
   // Node Buffer → Uint8Array
-  // WICHTIG: In Production/Server-Context ist Buffer verfügbar
+  // Type-Guard um TypeScript zu helfen
   if (Buffer.isBuffer(input)) {
     console.log('✅ Konvertiere Node Buffer zu Uint8Array')
+    // Expliziter Cast zu Buffer für TypeScript
+    const buffer = input as Buffer
     // Erstelle eine NEUE Uint8Array-Kopie (wichtiger für pdfjs-dist)
-    const uint8 = new Uint8Array(input.length)
-    for (let i = 0; i < input.length; i++) {
-      uint8[i] = input[i]
+    const uint8 = new Uint8Array(buffer.length)
+    for (let i = 0; i < buffer.length; i++) {
+      uint8[i] = buffer[i]
     }
     return uint8
   }
   
-  // Fallback für andere Typen
-  console.warn('⚠️ Unbekannter Input-Typ, versuche direkte Konvertierung')
-  try {
-    return new Uint8Array(input as any)
-  } catch (error) {
-    throw new Error(`Unsupported binary input type: ${typeof input}. Expected Uint8Array, ArrayBuffer, or Buffer.`)
-  }
+  // Sollte nie erreicht werden, aber für TypeScript
+  throw new Error(`Unsupported binary input type. Expected Uint8Array, ArrayBuffer, or Buffer.`)
 }
 
 export async function extractTextFromPDF(buffer: Buffer | Uint8Array | ArrayBuffer): Promise<string> {
