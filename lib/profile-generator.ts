@@ -157,21 +157,37 @@ export function generateProfileFromParsedCV(
   // Generiere Top Skills (max 4)
   const topSkills = generateTopSkills(parsedCV)
 
-  // Generiere Qualifikationen - kombiniere die wichtigsten Aspekte
+  // Generiere Qualifikationen - zeige ALLE wichtigen Aspekte
   const qualifications = [
-    // Zertifikate zuerst (wichtigste Credentials)
-    ...(parsedCV.certifications || []).slice(0, 3),
+    // ALLE Zertifikate (wichtigste Credentials)
+    ...(parsedCV.certifications || [])
+      .filter(c => c && c !== "null" && c.length > 0),
     // Berufserfahrung
-    `${parsedCV.experienceYears || "Mehrjährige"} praktische Berufserfahrung`,
-    // Bildungsabschlüsse
-    ...((parsedCV.education || []).slice(0, 2).map((edu) => `${edu.degree}, ${edu.institution}`)),
-    // Top 3 Technical Skills (ohne Level-Klammern)
+    (() => {
+      const years = parsedCV.experienceYears && parsedCV.experienceYears !== "null" 
+        ? parsedCV.experienceYears 
+        : "Mehrjährige"
+      return `${years} praktische Berufserfahrung`
+    })(),
+    // ALLE Bildungsabschlüsse
+    ...((parsedCV.education || [])
+      .filter(edu => edu && edu.degree && edu.degree !== "null")
+      .map((edu) => {
+        const degree = edu.degree !== "null" ? edu.degree : ""
+        const institution = edu.institution && edu.institution !== "null" ? edu.institution : ""
+        if (!degree) return null
+        return institution ? `${degree}, ${institution}` : degree
+      })
+      .filter(q => q !== null)),
+    // Top 5 Technical Skills (ohne Level-Klammern)
     ...((parsedCV.skills.technical || [])
-      .slice(0, 3)
+      .slice(0, 5)
+      .filter(skill => skill && skill !== "null")
       .map((skill) => {
         const cleanSkill = skill.replace(/\s*\(.+?\)$/, '')
-        return `Expertise in ${cleanSkill}`
+        return cleanSkill ? `Expertise in ${cleanSkill}` : null
       })
+      .filter(q => q !== null)
     ),
   ].filter(q => q && q.length > 0) // Entferne leere Einträge
 
@@ -185,23 +201,35 @@ export function generateProfileFromParsedCV(
   const personalDetails = [
     { label: "Verfügbarkeit", value: `Verfügbar in ${formData.availability}` },
     { label: "Gehaltsvorstellung", value: formData.salary || "Verhandlungsbereit" },
-    { label: "Standort", value: parsedCV.personalInfo?.location || formData.location || "-" },
+    { 
+      label: "Standort", 
+      value: (() => {
+        const location = parsedCV.personalInfo?.location || formData.location
+        return location && location !== "null" && location !== "undefined" ? location : "-"
+      })()
+    },
     { label: "Arbeitsmodell", value: "Vollzeit (Hybrid/Remote möglich)" },
-    { label: "Aktuelle Position", value: currentPosition },
+    { 
+      label: "Aktuelle Position", 
+      value: currentPosition && currentPosition !== "null" ? currentPosition : formData.position 
+    },
     {
       label: "Berufserfahrung",
       value: (parsedCV.experience || []).length > 0
-        ? `${parsedCV.experienceYears} in ${(parsedCV.experience || []).length} Position${(parsedCV.experience || []).length !== 1 ? 'en' : ''}`
-        : parsedCV.experienceYears,
+        ? `${parsedCV.experienceYears || "Mehrjährige"} in ${(parsedCV.experience || []).length} Position${(parsedCV.experience || []).length !== 1 ? 'en' : ''}`
+        : parsedCV.experienceYears || "-",
     },
     {
       label: "Kernkompetenzen",
-      value: topTechnologies !== "Technologien" ? topTechnologies : "-",
+      value: topTechnologies && topTechnologies.length > 0 && topTechnologies !== "Technologien" ? topTechnologies : "-",
     },
     {
       label: "Sprachkenntnisse",
       value: (parsedCV.skills?.languages || []).length > 0
-        ? (parsedCV.skills.languages || []).map((l) => `${l.language} (${l.level})`).join(", ")
+        ? (parsedCV.skills.languages || [])
+            .filter(l => l.language && l.language !== "null")
+            .map((l) => `${l.language} (${l.level || "Kenntnisse"})`)
+            .join(", ") || "-"
         : "-",
     },
   ]
@@ -241,51 +269,76 @@ export function generateProfileFromParsedCV(
   
   console.log('🌐 Sprachen generiert:', languages.length)
 
-  // Education - kombiniere Bildung und Zertifikate
+  // Education - kombiniere ALLE Bildungseinträge und Zertifikate
   const education = [
     ...((parsedCV.education || [])
-      .filter(edu => edu && edu.degree)
-      .map((edu) => `${edu.degree}, ${edu.institution}${edu.dateRange ? ' (' + edu.dateRange + ')' : ''}`)),
-    ...((parsedCV.certifications || []).filter(c => c && c.length > 0)),
+      .filter(edu => edu && edu.degree && edu.degree !== "null")
+      .map((edu) => {
+        const degree = edu.degree !== "null" ? edu.degree : ""
+        const institution = edu.institution && edu.institution !== "null" ? edu.institution : ""
+        const dateRange = edu.dateRange && edu.dateRange !== "null" ? edu.dateRange : ""
+        
+        if (!degree && !institution) return null
+        
+        let result = degree
+        if (institution) result += result ? `, ${institution}` : institution
+        if (dateRange) result += ` (${dateRange})`
+        
+        return result
+      })
+      .filter(e => e !== null)),
+    ...((parsedCV.certifications || [])
+      .filter(c => c && c.length > 0 && c !== "null")),
   ].filter(e => e && e.length > 0)
   
   console.log('🎓 Education generiert:', education.length, 'Einträge')
 
-  // Key Projects (aus Experience)
+  // Key Projects (aus ALLEN Experience Einträgen)
   const keyProjects = (parsedCV.experience || [])
-    .filter(exp => exp && exp.title && exp.company)
-    .slice(0, 5)
+    .filter(exp => exp && exp.title && exp.company && exp.title !== "null" && exp.company !== "null")
     .map((exp, index) => {
       const responsibilities = (exp.responsibilities || [])
-        .filter(r => r && r.length > 0)
+        .filter(r => r && r.length > 0 && r !== "null")
         .slice(0, 3)
+      
+      const cleanTitle = exp.title !== "null" ? exp.title : "Position"
+      const cleanCompany = exp.company !== "null" ? exp.company : "Unternehmen"
       
       return {
         id: `p${index + 1}`,
-        title: `${exp.title} bei ${exp.company}`,
+        title: `${cleanTitle} bei ${cleanCompany}`,
         category: index === 0 ? "Aktuelle Position" : "Frühere Position",
-        description: exp.description && exp.description.length > 0 
+        description: exp.description && exp.description.length > 0 && exp.description !== "null"
           ? exp.description 
-          : (responsibilities.length > 0 ? responsibilities[0] : `${exp.title}-Tätigkeit bei ${exp.company}`),
+          : (responsibilities.length > 0 ? responsibilities[0] : `${cleanTitle}-Tätigkeit`),
         tags: responsibilities.length > 0 
           ? responsibilities 
-          : [exp.title, exp.company],
-        scope: `${exp.dateRange || "Zeitraum nicht angegeben"} | ${exp.title} bei ${exp.company}`,
+          : [cleanTitle],
+        scope: `${exp.dateRange && exp.dateRange !== "null" ? exp.dateRange : "Zeitraum nicht angegeben"}`,
         icon: null,
       }
     })
   
-  console.log('🚀 Key Projects generiert:', keyProjects.length, 'mit Details aus Responsibilities')
+  console.log('🚀 Key Projects generiert:', keyProjects.length, 'Einträge (ALLE Berufsetappen)')
 
-  // Experience Timeline
+  // Experience Timeline (ALLE Berufsetappen)
   const experienceTimeline = (parsedCV.experience || [])
-    .filter(exp => exp && exp.title && exp.company)
-    .map((exp, index) => ({
-      id: `exp_${index}`,
-      dateRange: exp.dateRange || 'Zeitraum nicht angegeben',
-      title: `${exp.title}, ${exp.company}`,
-      description: exp.description || (exp.responsibilities || []).slice(0, 3).join(". "),
-    }))
+    .filter(exp => exp && exp.title && exp.company && exp.title !== "null" && exp.company !== "null")
+    .map((exp, index) => {
+      const cleanTitle = exp.title !== "null" ? exp.title : "Position"
+      const cleanCompany = exp.company !== "null" ? exp.company : "Unternehmen"
+      const responsibilities = (exp.responsibilities || [])
+        .filter(r => r && r.length > 0 && r !== "null")
+      
+      return {
+        id: `exp_${index}`,
+        dateRange: exp.dateRange && exp.dateRange !== "null" ? exp.dateRange : 'Zeitraum nicht angegeben',
+        title: `${cleanTitle}, ${cleanCompany}`,
+        description: responsibilities.length > 0 
+          ? responsibilities.slice(0, 3).join(' • ') 
+          : (exp.description && exp.description !== "null" ? exp.description : `${cleanTitle}-Aufgaben`),
+      }
+    })
   
   console.log('⏱️ Experience Timeline generiert:', experienceTimeline.length)
 
