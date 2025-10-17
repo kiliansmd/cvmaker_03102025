@@ -92,25 +92,54 @@ export function generateProfileFromParsedCV(
   // Generiere Profil-Zusammenfassung (3 Absätze) - nutze tatsächliche CV-Daten
   const latestRole = parsedCV.experience?.[0]?.title || formData.position
   const topSkillsText = (parsedCV.skills?.technical || [])
-    .slice(0, 4)
-    .map(s => s.replace(/\s*\(.+?\)$/, '')) // Entferne Level-Klammern für bessere Lesbarkeit
+    .slice(0, 5)
+    .map(s => s.replace(/\s*\(.+?\)$/, '')) // Entferne Level-Klammern
     .filter(s => s.length > 0)
-    .join(", ") || "moderne Technologien"
+    .join(", ")
   
   // Prüfe ob wir echte CV-Daten haben
   const hasRealData = (parsedCV.experience || []).length > 0 || (parsedCV.skills?.technical || []).length > 0
   
   // Positionszentrierte Zusammenfassung
   const profileSummary = hasRealData ? [
-    `${latestRole} mit ${parsedCV.experienceYears} einschlägiger Berufserfahrung. ${parsedCV.summary}`,
-    `Fachliche Schwerpunkte: ${topSkillsText}. ${
-      parsedCV.experience?.[0] 
-        ? `Derzeit tätig bei ${parsedCV.experience[0].company} in der Position ${parsedCV.experience[0].title}.`
-        : `Umfassende Praxiserfahrung in verschiedenen Projekten und Organisationen.`
-    }`,
-    `Arbeitsweise: ${
-      (parsedCV.skills?.soft || []).slice(0, 2).join(", ") || "strukturiert, zielorientiert und teamfähig"
-    }. Schwerpunkt auf nachhaltige Ergebnisse und erfolgreiche Zusammenarbeit mit allen Stakeholdern.`,
+    // Absatz 1: Rolle + Erfahrung + CV-Summary
+    (() => {
+      let p1 = `${latestRole}`
+      if (parsedCV.experienceYears && parsedCV.experienceYears.length > 0) {
+        p1 += ` mit ${parsedCV.experienceYears} einschlägiger Berufserfahrung`
+      }
+      if (parsedCV.summary && parsedCV.summary.length > 0) {
+        p1 += `. ${parsedCV.summary}`
+      }
+      return p1
+    })(),
+    
+    // Absatz 2: Aktuelle Arbeit + Top Skills
+    (() => {
+      let p2 = ""
+      if (parsedCV.experience?.[0]) {
+        p2 = `Aktuell tätig als ${parsedCV.experience[0].title} bei ${parsedCV.experience[0].company}.`
+        if (parsedCV.experience[0].description) {
+          p2 += ` ${parsedCV.experience[0].description}`
+        }
+      } else {
+        p2 = `Expertise in verschiedenen Branchen und Projekten.`
+      }
+      
+      if (topSkillsText.length > 0) {
+        p2 += ` Schwerpunkte: ${topSkillsText}.`
+      }
+      return p2
+    })(),
+    
+    // Absatz 3: Soft Skills + Arbeitsweise
+    (() => {
+      const softSkills = (parsedCV.skills?.soft || []).slice(0, 3).join(", ")
+      if (softSkills.length > 0) {
+        return `Arbeitsweise geprägt durch: ${softSkills}. Fokus auf nachhaltige Ergebnisse und erfolgreiche Zusammenarbeit mit allen Stakeholdern.`
+      }
+      return `Strukturierte und zielorientierte Arbeitsweise mit Fokus auf nachhaltige Ergebnisse und erfolgreiche Zusammenarbeit.`
+    })(),
   ] : [
     `${formData.position} mit fundierter Qualifikation und praktischer Erfahrung im Fachgebiet.`,
     `Motiviert für neue Herausforderungen mit Fokus auf kontinuierliche Weiterentwicklung und Qualität.`,
@@ -118,6 +147,12 @@ export function generateProfileFromParsedCV(
   ]
   
   console.log('📊 Profile Summary generiert:', profileSummary.length, 'Absätze')
+  console.log('📊 Summary Details:', { 
+    hasSummaryText: !!parsedCV.summary,
+    experienceCount: (parsedCV.experience || []).length,
+    skillsCount: (parsedCV.skills?.technical || []).length,
+    softSkillsCount: (parsedCV.skills?.soft || []).length
+  })
 
   // Generiere Top Skills (max 4)
   const topSkills = generateTopSkills(parsedCV)
@@ -220,17 +255,27 @@ export function generateProfileFromParsedCV(
   const keyProjects = (parsedCV.experience || [])
     .filter(exp => exp && exp.title && exp.company)
     .slice(0, 5)
-    .map((exp, index) => ({
-      id: `p${index + 1}`,
-      title: `${exp.title} bei ${exp.company}`,
-      category: index === 0 ? "Aktuelle Position" : "Berufserfahrung",
-      description: exp.description || (exp.responsibilities || []).slice(0, 2).join(". "),
-      tags: (exp.responsibilities || []).slice(0, 4),
-      scope: `Erfolgreiche ${exp.title}-Tätigkeit bei ${exp.company}.`,
-      icon: null,
-    }))
+    .map((exp, index) => {
+      const responsibilities = (exp.responsibilities || [])
+        .filter(r => r && r.length > 0)
+        .slice(0, 3)
+      
+      return {
+        id: `p${index + 1}`,
+        title: `${exp.title} bei ${exp.company}`,
+        category: index === 0 ? "Aktuelle Position" : "Frühere Position",
+        description: exp.description && exp.description.length > 0 
+          ? exp.description 
+          : (responsibilities.length > 0 ? responsibilities[0] : `${exp.title}-Tätigkeit bei ${exp.company}`),
+        tags: responsibilities.length > 0 
+          ? responsibilities 
+          : [exp.title, exp.company],
+        scope: `${exp.dateRange || "Zeitraum nicht angegeben"} | ${exp.title} bei ${exp.company}`,
+        icon: null,
+      }
+    })
   
-  console.log('🚀 Key Projects generiert:', keyProjects.length)
+  console.log('🚀 Key Projects generiert:', keyProjects.length, 'mit Details aus Responsibilities')
 
   // Experience Timeline
   const experienceTimeline = (parsedCV.experience || [])

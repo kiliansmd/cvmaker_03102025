@@ -140,18 +140,19 @@ class OpenAIClient {
   }
 
   /**
-   * Normalisiert die OpenAI-Response zu unserem Schema
-   * Robuste Handhabung - filtert keine Daten raus
+   * Normalisiere OpenAI-Response mit robusten Fallbacks
    */
-  private normalizeOpenAIResponse(raw: any): any {
-    // Fallback-Werte wenn Felder komplett fehlen
+  private normalizeOpenAIResponse(raw: any): ParsedCV {
+    console.log("📝 Normalisiere OpenAI-Response...")
+
+    // Extrahiere nested structures
     const personalInfo = raw?.personalInfo || {}
     const skills = raw?.skills || {}
-    
-    return {
+
+    const normalized = {
       personalInfo: {
-        name: String(personalInfo?.name || raw?.name || ''),
-        location: String(personalInfo?.location || raw?.location || ''),
+        name: String(personalInfo?.name || raw?.name || '').trim(),
+        location: String(personalInfo?.location || raw?.location || '').trim(),
         email: personalInfo?.email || raw?.email || undefined,
         phone: personalInfo?.phone || raw?.phone || undefined,
         dateOfBirth: personalInfo?.dateOfBirth || undefined,
@@ -159,28 +160,48 @@ class OpenAIClient {
       },
       experience: Array.isArray(raw?.experience)
         ? raw.experience
-            .filter((e: any) => e && (e.title || e.company)) // Filtere nur komplett leere
-            .map((e: any) => ({
-              title: String(e?.title || e?.position || 'Position'),
-              company: String(e?.company || e?.employer || 'Unternehmen'),
-              dateRange: String(e?.dateRange || e?.duration || e?.period || ''),
-              description: String(e?.description || e?.summary || ''),
-              responsibilities: Array.isArray(e?.responsibilities)
-                ? e.responsibilities.map((r: any) => String(r)).filter((r: string) => r.length > 0)
-                : Array.isArray(e?.tasks)
-                ? e.tasks.map((t: any) => String(t)).filter((t: string) => t.length > 0)
-                : [],
-            }))
+            .filter((e: any) => e && (e.title || e.company)) // Nur Einträge mit Title oder Company
+            .map((e: any) => {
+              const title = String(e?.title || e?.position || '').trim()
+              const company = String(e?.company || e?.employer || '').trim()
+              const dateRange = String(e?.dateRange || e?.duration || e?.period || '').trim()
+              const description = String(e?.description || e?.summary || '').trim()
+              
+              // Validierung: Mindestens Title oder Company sollte vorhanden sein
+              if (!title && !company) return null
+              
+              return {
+                title: title || '(Keine Position)',
+                company: company || '(Firma nicht angegeben)',
+                dateRange: dateRange || '(Zeitraum nicht angegeben)',
+                description: description || '',
+                responsibilities: Array.isArray(e?.responsibilities)
+                  ? e.responsibilities.map((r: any) => String(r).trim()).filter((r: string) => r.length > 0)
+                  : Array.isArray(e?.tasks)
+                  ? e.tasks.map((t: any) => String(t).trim()).filter((t: string) => t.length > 0)
+                  : [],
+              }
+            })
+            .filter((e: any) => e !== null)
         : [],
       education: Array.isArray(raw?.education)
         ? raw.education
-            .filter((e: any) => e && (e.degree || e.institution))
-            .map((e: any) => ({
-              degree: String(e?.degree || e?.qualification || 'Abschluss'),
-              institution: String(e?.institution || e?.school || e?.university || 'Institution'),
-              dateRange: String(e?.dateRange || e?.duration || e?.period || e?.year || ''),
-              details: e?.details || e?.field || e?.major ? String(e.details || e.field || e.major) : undefined,
-            }))
+            .filter((e: any) => e && (e.degree || e.institution)) // Nur Einträge mit Degree oder Institution
+            .map((e: any) => {
+              const degree = String(e?.degree || e?.qualification || '').trim()
+              const institution = String(e?.institution || e?.school || e?.university || '').trim()
+              
+              // Validierung
+              if (!degree && !institution) return null
+              
+              return {
+                degree: degree || '(Abschluss nicht angegeben)',
+                institution: institution || '(Institution nicht angegeben)',
+                dateRange: String(e?.dateRange || e?.duration || e?.period || e?.year || '').trim() || '',
+                details: e?.details || e?.field || e?.major ? String(e.details || e.field || e.major).trim() : undefined,
+              }
+            })
+            .filter((e: any) => e !== null)
         : [],
       skills: {
         technical: Array.isArray(skills?.technical)
@@ -192,43 +213,66 @@ class OpenAIClient {
           : [],
         soft: Array.isArray(skills?.soft)
           ? skills.soft
-              .map((s: any) => String(s))
+              .map((s: any) => String(s).trim())
               .filter((s: string) => s.length > 0)
           : Array.isArray(skills?.softSkills)
-          ? skills.softSkills.map((s: any) => String(s)).filter((s: string) => s.length > 0)
+          ? skills.softSkills.map((s: any) => String(s).trim()).filter((s: string) => s.length > 0)
           : [],
         languages: Array.isArray(skills?.languages)
           ? skills.languages
-              .filter((l: any) => l && l.language)
+              .filter((l: any) => l && (l.language || l.lang))
               .map((l: any) => ({
-                language: String(l?.language || l?.lang || ''),
-                level: String(l?.level || l?.proficiency || ''),
+                language: String(l?.language || l?.lang || '').trim(),
+                level: String(l?.level || l?.proficiency || '').trim(),
               }))
+              .filter((l: any) => l.language.length > 0)
           : [],
       },
       certifications: Array.isArray(raw?.certifications)
         ? raw.certifications
-            .map((c: any) => String(c))
+            .map((c: any) => String(c).trim())
             .filter((c: string) => c.length > 0)
         : Array.isArray(raw?.certificates)
-        ? raw.certificates.map((c: any) => String(c)).filter((c: string) => c.length > 0)
+        ? raw.certificates.map((c: any) => String(c).trim()).filter((c: string) => c.length > 0)
         : [],
       projects: Array.isArray(raw?.projects)
         ? raw.projects
             .filter((p: any) => p && p.title)
             .map((p: any) => ({
-              title: String(p?.title || ''),
-              description: String(p?.description || p?.summary || ''),
+              title: String(p?.title || '').trim(),
+              description: String(p?.description || p?.summary || '').trim(),
               technologies: Array.isArray(p?.technologies)
-                ? p.technologies.map((t: any) => String(t)).filter((t: string) => t.length > 0)
+                ? p.technologies.map((t: any) => String(t).trim()).filter((t: string) => t.length > 0)
                 : Array.isArray(p?.tech)
-                ? p.tech.map((t: any) => String(t)).filter((t: string) => t.length > 0)
+                ? p.tech.map((t: any) => String(t).trim()).filter((t: string) => t.length > 0)
                 : [],
             }))
         : [],
-      summary: String(raw?.summary || raw?.profile || raw?.about || 'Erfahrener Fachexperte mit breitem Skill-Set.'),
-      experienceYears: String(raw?.experienceYears || raw?.totalExperience || raw?.yearsOfExperience || '< 1 Jahr'),
+      summary: String(raw?.summary || raw?.profile || raw?.about || '').trim(),
+      experienceYears: String(raw?.experienceYears || raw?.totalExperience || raw?.yearsOfExperience || '').trim(),
     }
+
+    // Logging für Qualitätskontrolle
+    console.log("📊 ===== NORMALISIERTE DATEN =====")
+    console.log("👤 Name:", normalized.personalInfo.name || "(leer)")
+    console.log("📍 Location:", normalized.personalInfo.location || "(leer)")
+    console.log("💼 Experience-Einträge:", normalized.experience.length)
+    if (normalized.experience.length > 0) {
+      console.log("   - Erste Position:", normalized.experience[0].title, "bei", normalized.experience[0].company)
+      console.log("   - Responsibilities:", normalized.experience[0].responsibilities.length, "Punkte")
+    }
+    console.log("🎓 Education-Einträge:", normalized.education.length)
+    if (normalized.education.length > 0) {
+      console.log("   - Erste:", normalized.education[0].degree, "von", normalized.education[0].institution)
+    }
+    console.log("💡 Technical Skills:", normalized.skills.technical.length)
+    console.log("🤝 Soft Skills:", normalized.skills.soft.length)
+    console.log("🗣️ Sprachen:", normalized.skills.languages.length)
+    console.log("📜 Zertifizierungen:", normalized.certifications.length)
+    console.log("🚀 Projekte:", normalized.projects.length)
+    console.log("📊 ===== END NORMALISIERTE DATEN =====")
+
+    return normalized as ParsedCV
   }
 
   /**
@@ -238,174 +282,144 @@ class OpenAIClient {
     return `Du bist ein hochspezialisierter Experte für CV-Parsing, Lebenslauf-Analyse und Jobprofil-Erstellung.
 
 KRITISCHE AUFGABE:
-Extrahiere ALLE Informationen aus dem Lebenslauf mit HÖCHSTER PRÄZISION. Achte besonders auf:
+Extrahiere ALLE Informationen aus dem Lebenslauf mit HÖCHSTER PRÄZISION und VOLLSTÄNDIGKEIT:
 - EXAKTE Jobtitel (nicht interpretieren oder umschreiben)
+- EXAKTE Firmennamen (nicht anonymisieren)
+- EXAKTE Personennamen (nicht anonymisieren)
 - KLARE Trennung zwischen Position/Rolle und Verantwortlichkeiten
-- VOLLSTÄNDIGE Skill-Listen (ALLE erwähnten Fähigkeiten, Kompetenzen, Tools, Methoden)
-- KORREKTE zeitliche Einordnung
+- VOLLSTÄNDIGE Skill-Listen (JEDE fachliche Kompetenz, JEDES Tool, JEDES System, JEDE Methode)
+- KORREKTE zeitliche Einordnung mit Monaten und Jahren
 - BRANCHENSPEZIFISCHE Terminologie beibehalten
+
+KEINE ANONYMISIERUNG:
+✅ Übernimm Namen wie sie stehen: "Max Mustermann" → "Max Mustermann" (nicht "Candidate A" oder "Person XYZ")
+✅ Übernimm Firmennamen: "Microsoft GmbH" → "Microsoft GmbH" (nicht "Tech Company" oder "Company X")
+✅ Übernimm Projektbezeichnungen: "SAP S/4HANA Migration" → "SAP S/4HANA Migration" (nicht "Project 1")
 
 ANTWORT-FORMAT (STRIKT EINHALTEN):
 Antworte NUR mit validem JSON in diesem EXAKTEN Format:
 
 {
   "personalInfo": {
-    "name": "Vollständiger Name (exakt wie im CV)",
-    "location": "Stadt/Region (exakt wie angegeben)",
-    "email": "email@example.com",
-    "phone": "+49..."
+    "name": "Vollständiger Name exakt wie im CV (NICHT anonymisiert)",
+    "location": "Stadt/Region exakt wie angegeben",
+    "email": "email@example.com oder Wert aus CV oder null",
+    "phone": "+49... oder Wert aus CV oder null"
   },
-  "summary": "2-3 prägnante Sätze, die die Kernkompetenzen und Erfahrung zusammenfassen",
-  "experienceYears": "Berechne die Gesamtjahre korrekt (z.B. '8+ Jahre', '3-5 Jahre', '< 1 Jahr')",
+  "summary": "2-3 prägnante Sätze, die die Kernkompetenzen und Erfahrung zusammenfassen - BASIEREND auf realen CV-Daten",
+  "experienceYears": "Berechne die Gesamtjahre EXAKT (z.B. '8+ Jahre', '3-5 Jahre', '< 1 Jahr')",
   "experience": [
     {
-      "title": "EXAKTER Jobtitel wie im CV (z.B. 'Senior SAP HCM Consultant', 'Full-Stack Developer', 'IT-Projektleiter')",
-      "company": "Firmenname (exakt)",
-      "dateRange": "MM/YYYY - MM/YYYY oder 'Heute' (z.B. '03/2020 - Heute', '2018 - 2020')",
-      "description": "1-2 Sätze Kontext zur Position und dem Unternehmensbereich",
+      "title": "EXAKTER Jobtitel wie im CV - NICHT verändern oder neu formulieren",
+      "company": "Firmenname EXAKT wie angegeben - NICHT anonymisieren",
+      "dateRange": "MM/YYYY - MM/YYYY oder 'Heute' (exakt wie im CV oder rekonstruiert)",
+      "description": "1-2 Sätze zum Unternehmensbereich/Kontext - BASIEREND auf CV-Inhalten",
       "responsibilities": [
-        "Konkrete Aufgabe 1 (was wurde gemacht)",
-        "Konkrete Aufgabe 2 (Technologien/Methoden genannt)",
-        "Konkrete Aufgabe 3 (Erfolge/Projekte)"
+        "Konkrete Aufgabe 1 - EXAKT wie beschrieben, mit verwendeten Tools/Technologien",
+        "Konkrete Aufgabe 2 - Mit Erfolgen/Achievements wenn erwähnt",
+        "Konkrete Aufgabe 3 - Mit Technologien/Methoden",
+        "Min. 3-6 konkrete, detaillierte Punkte"
       ]
     }
   ],
   "education": [
     {
-      "degree": "Vollständiger Abschluss (z.B. 'Master of Science Informatik', 'Bachelor BWL', 'Ausbildung Fachinformatiker')",
-      "institution": "Vollständiger Name der Institution",
-      "dateRange": "YYYY - YYYY (z.B. '2015 - 2018')"
+      "degree": "Vollständiger Titel - NICHT abkürzen (z.B. 'Master of Science Informatik', 'Bachelor of Arts BWL', 'Berufsausbildung als Fachinformatiker')",
+      "institution": "Vollständiger Name der Institution - EXAKT wie im CV",
+      "dateRange": "YYYY - YYYY oder genaue Daten wenn verfügbar",
+      "details": "Schwerpunkt/Spezialisierung wenn erwähnt"
     }
   ],
   "skills": {
     "technical": [
-      "ALLE fachlichen Kompetenzen, Tools, Technologien, Methoden, Systeme im Format 'Name (Level)'",
-      "IT-Beispiele: 'SAP HCM (Experte)', 'Python (Sehr gut)', 'Agile Methoden (Gut)'",
-      "Non-IT-Beispiele: 'Vertragsverhandlung (Experte)', 'Change Management (Sehr gut)', 'Budgetplanung (Gut)'",
-      "Beratung: 'Strategieberatung (Experte)', 'Prozessoptimierung (Sehr gut)'",
-      "Handwerk: 'CNC-Programmierung (Experte)', 'Qualitätssicherung (Sehr gut)'",
-      "Level basiert auf: Jahre Erfahrung, Projektanzahl, Zertifikate, Verantwortungsbereich"
+      "JEDE fachliche Kompetenz erwähnt im CV mit Level 'Name (Level)' Format",
+      "ALLE Technologien, Tools, Systeme, Methoden - nicht nur bekannte oder populäre",
+      "IT-Beispiele: 'SAP HCM (Experte)', 'Python (Sehr gut)', 'Docker (Gut)', 'Kubernetes (Gut)', 'Agile Methoden (Experte)'",
+      "Non-IT-Beispiele: 'Vertragsverhandlung (Experte)', 'Change Management (Sehr gut)', 'Budgetplanung (Gut)', 'Stakeholder-Management (Experte)'",
+      "Beratung: 'Strategieberatung (Experte)', 'Prozessoptimierung (Sehr gut)', 'Digital Transformation (Gut)'",
+      "Handwerk: 'CNC-Programmierung (Experte)', 'Qualitätssicherung (Sehr gut)', 'CAD/CAM (Gut)'",
+      "Level-Schätzung basiert auf: Jahre Erfahrung (exakt vom CV), Anzahl Projekte, Zertifikate, Führungsverantwortung",
+      "KEINE Generika oder Annahmen - nur ECHTE Fähigkeiten aus dem CV"
     ],
     "soft": [
-      "ALLE Soft Skills und überfachliche Kompetenzen",
-      "Explizit genannt ODER aus Kontext ableitbar",
-      "Beispiele: 'Führungskompetenz', 'Verhandlungsgeschick', 'Kundenorientierung', 'Analytisches Denken'"
+      "ALLE Soft Skills und überfachliche Kompetenzen - explizit genannt ODER detailliert aus Kontext ableitbar",
+      "Beispiele: 'Führungskompetenz (aus Führungsrolle)', 'Verhandlungsgeschick (aus Projektbeschreibung)', 'Kundenorientierung', 'Analytisches Denken', 'Teamfähigkeit'",
+      "Min. 5-8 Punkte, nur wenn echte Hinweise im CV vorhanden"
     ],
     "languages": [
-      {"language": "Sprache", "level": "Muttersprache / C2 / C1 / B2 / B1 / A2 / A1 / Fließend / Verhandlungssicher / Grundkenntnisse"}
+      {"language": "Exakter Sprachname", "level": "Muttersprache / C2 / C1 / B2 / B1 / A2 / A1 / Fließend / Verhandlungssicher / Grundkenntnisse"}
     ]
   },
   "certifications": [
-    "Vollständige Namen aller Zertifikate",
-    "Inklusive ausstellende Organisation wenn genannt"
+    "Vollständige Namen aller Zertifikate/Lizenzen - EXAKT wie angegeben",
+    "Mit ausstellender Organisation wenn genannt",
+    "KEINE erfundenen Zertifikate"
+  ],
+  "projects": [
+    {
+      "title": "Projektname - EXAKT wie beschrieben",
+      "description": "Was wurde gemacht - konkret und detailliert",
+      "technologies": ["Technology/Tool 1", "Technology/Tool 2", "..."]
+    }
   ]
 }
 
 KRITISCHE PARSING-REGELN:
 
-1. JOBTITEL (title):
-   ✅ EXAKT übernehmen wie im CV angegeben
-   ✅ NICHT umformulieren oder "verbessern"
-   ✅ NICHT mit Verantwortlichkeiten verwechseln
-   ✅ Beispiele KORREKT:
-      - "Senior SAP HCM Consultant" (NICHT: "SAP Berater")
-      - "Full-Stack JavaScript Developer" (NICHT: "Entwickler")
-      - "IT-Projektleiter Digital Transformation" (NICHT: "Projektmanager")
-   
-2. ROLLEN vs. AUFGABEN:
-   ✅ title = Was die Person WAR (Jobtitel/Position)
-   ✅ responsibilities = Was die Person TAT (Tätigkeiten)
-   ✅ NIEMALS in title: "Entwicklung von...", "Beratung für..." → Das gehört in responsibilities
+1. KEINE ANONYMISIERUNG:
+   ✅ Übernimm alle Namen, Firmennamen, Orte, Projektnamen EXAKT
+   ✅ "John Smith" → "John Smith" (nicht "Candidate A")
+   ✅ "Google" → "Google" (nicht "Tech Company")
+   ✅ "Berlin" → "Berlin" (nicht "City X")
 
-3. SKILLS-EXTRAKTION (BRANCHENUNABHÄNGIG):
-   ✅ Extrahiere JEDE genannte Fähigkeit, Kompetenz, Tool, Methode, System
-   ✅ Funktioniert für ALLE Branchen:
-      - IT: Software, Frameworks, Programmiersprachen
-      - Beratung: Methoden, Frameworks, Branchen-Know-how
-      - Management: Führungsmethoden, Tools, Prozesse
-      - Handwerk: Maschinen, Techniken, Materialien
-      - Medizin: Verfahren, Geräte, Spezialisierungen
-      - Marketing: Plattformen, Strategien, Analytics
-   ✅ Schätze Level basierend auf:
-      - Anzahl Jahre Anwendung
-      - Anzahl Projekte/Einsätze
-      - Vorhandene Zertifikate
-      - Position/Verantwortung
-   ✅ Format: "Kompetenz (Level)" z.B. "Vertragsverhandlung (Experte)", "Change Management (Sehr gut)"
+2. JOBTITEL (title):
+   ✅ EXAKT übernehmen wie im CV angegeben - NICHT umformulieren
+   ✅ "Senior SAP HCM Consultant" → "Senior SAP HCM Consultant" (NICHT: "SAP Berater")
+   ✅ "Full-Stack JavaScript Developer" → "Full-Stack JavaScript Developer" (NICHT: "Entwickler")
+   ✅ "IT-Projektleiter Digital Transformation" → "IT-Projektleiter Digital Transformation" (NICHT: "Projektmanager")
+   ✅ NIEMALS: Verantwortlichkeiten ins title-Feld
 
-4. EXPERIENCE-YEARS:
-   ✅ Berechne TOTAL über ALLE Positionen
-   ✅ Berücksichtige Überlappungen (Teilzeit/Freiberuflich)
-   ✅ Formate: "< 1 Jahr", "1-2 Jahre", "3-5 Jahre", "5-8 Jahre", "8-10 Jahre", "10+ Jahre", "15+ Jahre"
+3. ROLLEN vs. AUFGABEN:
+   ✅ title = Was die Person WAR (Jobtitel wie im CV)
+   ✅ responsibilities = Was die Person TAT (konkrete Tätigkeiten und Erfolge)
+   ✅ description = Kontext zum Unternehmen/Bereich
 
-5. VERANTWORTLICHKEITEN (responsibilities):
-   ✅ Konkrete, messbare Tätigkeiten
-   ✅ Mit verwendeten Technologien/Tools
-   ✅ Erfolge/Achievements separat nennen
-   ✅ 3-6 Punkte pro Position
+4. SKILLS-EXTRAKTION (BRANCHENUNABHÄNGIG + VOLLSTÄNDIG):
+   ✅ Extrahiere JEDE genannte Fähigkeit, Kompetenz, Tool, Methode, System - KEINE Auslassungen
+   ✅ Funktioniert für ALLE Branchen - IT, Beratung, Management, Handwerk, Medizin, Marketing, etc.
+   ✅ Schätze Level basierend auf EXAKTEN Informationen vom CV:
+      - "5 Jahre Erfahrung" → "5 Jahre Erfahrung (Experte/Sehr gut)"
+      - "20 Projekte mit X" → "Experte"
+      - "Zertifiziert in X" → "Experte"
+      - "Verwendet in 3 Rollen" → "Gut"
+   ✅ Format: "Kompetenz (Level)" z.B. "SAP HCM (Experte)", "Change Management (Sehr gut)", "Python (Gut)"
 
-6. EDUCATION:
-   ✅ Vollständiger Titel (nicht abkürzen)
-   ✅ "Master of Science Informatik" statt "M.Sc. Informatik"
-   ✅ "Bachelor of Arts BWL" statt "B.A. BWL"
+5. FIRMENNAMEN + DATEN:
+   ✅ Übernimm exakt wie im CV: "Siemens AG" nicht "Siemens" nicht "Siemens Company"
+   ✅ Datumsbereiche: Falls im CV "März 2019 - Dezember 2022", dann "03/2019 - 12/2022"
+   ✅ Wenn aktuell: "01/2024 - Heute" oder "Heute" wenn Monat nicht genannt
 
-BEISPIEL KORREKT vs. FALSCH:
-
-❌ FALSCH (IT-Beispiel):
-{
-  "experience": [{
-    "title": "Entwicklung von Web-Anwendungen",  ← Tätigkeit, kein Titel!
-    "responsibilities": ["Frontend", "Backend"]  ← Zu vage
-  }]
-}
-
-✅ KORREKT (IT-Beispiel):
-{
-  "experience": [{
-    "title": "Senior Full-Stack Developer",  ← Exakter Jobtitel
-    "company": "Tech GmbH",
-    "description": "Entwicklung unternehmenskritischer Web-Anwendungen",
-    "responsibilities": [
-      "Entwicklung von React-Frontend-Komponenten",
-      "Implementierung von REST-APIs mit Node.js",
-      "Code-Reviews und Mentoring"
-    ]
-  }]
-}
-
-❌ FALSCH (Beratung-Beispiel):
-{
-  "experience": [{
-    "title": "Beratung von Kunden",  ← Tätigkeit!
-    "responsibilities": ["Analyse", "Empfehlungen"]  ← Zu vage
-  }]
-}
-
-✅ KORREKT (Beratung-Beispiel):
-{
-  "experience": [{
-    "title": "Senior Management Consultant",  ← Exakter Titel
-    "company": "Beratung AG",
-    "description": "Strategieberatung für mittelständische Unternehmen",
-    "responsibilities": [
-      "Durchführung von Unternehmensanalysen und Potenzialstudien",
-      "Entwicklung von Transformationsstrategien",
-      "Change Management und Stakeholder-Kommunikation"
-    ]
-  }]
-}
+6. RESPONSIBILITIES - KONKRETE UND DETAILLIERTE PUNKTE:
+   ✅ NICHT: "Entwicklung", "Management", "Beratung" ← Zu vage
+   ✅ SONDERN: "Entwicklung von React-Frontend-Komponenten mit Redux State Management für E-Commerce-Platform"
+   ✅ NICHT: "SAP" ← Was genau?
+   ✅ SONDERN: "SAP HCM Implementierung für 500+ Mitarbeiter, User-Acceptance-Testing und Training durchgeführt"
+   ✅ Mit Erfolgen/Metriken wenn im CV genannt: "30% Effizienzsteigerung durch Automatisierung"
 
 QUALITÄTSKONTROLLE:
-- Lies den CV 2x durch bevor du antwortest
-- Prüfe: Sind ALLE Skills extrahiert?
-- Prüfe: Sind die Jobtitel EXAKT übernommen?
-- Prüfe: Sind die Verantwortlichkeiten konkret und detailliert?
-- Prüfe: Stimmen die Zeiträume?
+- Lies den CV MINIMUM 2x durch bevor du antwortest
+- Prüfe: Sind ALLE Skills extrahiert? (Check: Wurden alle Technologien/Tools genannt?)
+- Prüfe: Sind die Jobtitel EXAKT wie im CV?
+- Prüfe: Sind die Verantwortlichkeiten konkret, detailliert und mit Tools/Technologien versehen?
+- Prüfe: Stimmen Namen, Firmen, Orte exakt?
+- Prüfe: Stimmen Datumsangaben?
 
 KEINE ERFINDUNGEN:
-- Wenn ein Skill-Level unklar ist: Schätze konservativ ("Gut" statt "Experte")
-- Wenn eine Information fehlt: Leere Strings oder Arrays
-- NIEMALS Informationen hinzufügen, die nicht im CV stehen`
+- Wenn ein Skill-Level unklar ist: Schätze KONSERVATIV oder lass weg
+- Wenn eine Information fehlt: Leere Strings oder null verwenden
+- NIEMALS Informationen hinzufügen, die nicht im CV stehen
+- NIEMALS anonymisieren
+- NIEMALS "vereinfachen" oder "verbessern"`
   }
 
   /**
