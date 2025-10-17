@@ -30,11 +30,14 @@ class OpenAIClient {
    * Parse CV mit strukturiertem Output und Retry-Logic
    */
   async parseCV(cvText: string, additionalInfo?: string): Promise<ParsedCV> {
+    // Cache-Busting: Eindeutige Request-ID
+    const requestId = `cv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     console.log('🔑 OpenAI-Client verwendet API-Key:', config.OPENAI_API_KEY.substring(0, 15) + '...')
     if (config.BACKGROUND_AGENT_KEY) {
       console.log('🤖 Background-Agent aktiv:', config.BACKGROUND_AGENT_KEY.substring(0, 8) + '...')
     }
     console.log('🔑 OpenAI-Model:', config.OPENAI_MODEL)
+    console.log('🆔 Request-ID (Cache-Busting):', requestId)
     
     if (!cvText || cvText.trim().length < 50) {
       throw new OpenAIError(

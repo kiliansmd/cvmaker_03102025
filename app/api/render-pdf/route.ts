@@ -5,6 +5,13 @@ import { NextResponse } from "next/server"
 // Renders eine einzige lange PDF-Seite (Breite default 1400px), mit Hintergründen, ohne Ränder/Seitenumbrüche
 
 export async function POST(req: Request) {
+  // Anti-Caching Headers
+  const headers = new Headers()
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  headers.set('Pragma', 'no-cache')
+  headers.set('Expires', '0')
+  headers.set('Surrogate-Control', 'no-store')
+  
   try {
     const body = await req.json().catch(() => ({})) as any
     const { url, html, width } = body || {}
@@ -12,7 +19,7 @@ export async function POST(req: Request) {
     if ((!url && !html) || (url && html)) {
       return NextResponse.json(
         { error: "Bitte genau eine Quelle angeben: url ODER html." },
-        { status: 400 }
+        { status: 400, headers }
       )
     }
 
@@ -25,7 +32,7 @@ export async function POST(req: Request) {
     if (!puppeteer) {
       return NextResponse.json(
         { error: "Puppeteer ist nicht installiert. Bitte `pnpm add puppeteer` ausführen." },
-        { status: 500 }
+        { status: 500, headers }
       )
     }
 
@@ -167,7 +174,7 @@ export async function POST(req: Request) {
     console.error("/api/render-pdf error", error)
     return NextResponse.json(
       { error: error?.message || "Unbekannter Fehler beim PDF-Rendering" },
-      { status: 500 }
+      { status: 500, headers }
     )
   }
 }

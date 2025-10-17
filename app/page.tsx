@@ -216,8 +216,12 @@ export default function HomePage() {
       formDataToSend.append("contactPhone", formData.contactPhone)
       formDataToSend.append("contactEmail", formData.contactEmail)
       formDataToSend.append("additionalInfo", additionalInfo)
+      // Cache-Busting: Eindeutige Request-ID
+      const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      formDataToSend.append("requestId", requestId)
 
       console.log("📤 Sende CV zur Verarbeitung...")
+      console.log("🆔 Request-ID (Cache-Busting):", requestId)
 
       // Rufe Server Action auf (Schritt 1: Parsing)
       const result = await processCVAction(formDataToSend)

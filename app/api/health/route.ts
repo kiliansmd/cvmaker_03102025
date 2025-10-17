@@ -3,6 +3,12 @@ import { openAIClient } from '@/lib/openai-client'
 import { config } from '@/lib/config'
 
 export async function GET() {
+  // Anti-Caching Headers
+  const headers = new Headers()
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+  headers.set('Pragma', 'no-cache')
+  headers.set('Expires', '0')
+  headers.set('Surrogate-Control', 'no-store')
   const checks: Record<string, boolean | string> = {
     server: true,
     timestamp: new Date().toISOString(),
@@ -29,7 +35,10 @@ export async function GET() {
 
   return NextResponse.json(
     { status, checks },
-    { status: isHealthy ? 200 : 503 }
+    { 
+      status: isHealthy ? 200 : 503,
+      headers
+    }
   )
 }
 

@@ -28,7 +28,12 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
       contactPhone: formData.get("contactPhone") as string,
       contactEmail: formData.get("contactEmail") as string,
       additionalInfo: formData.get("additionalInfo") as string,
+      requestId: formData.get("requestId") as string, // Cache-Busting ID
     }
+
+    // Cache-Busting Logging
+    const requestId = rawFormData.requestId || `server_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    console.log("🆔 Server Action Request-ID (Cache-Busting):", requestId)
 
     // Validiere mit Zod (wirft bei Fehler)
     const validatedData = CVUploadFormSchema.parse({
