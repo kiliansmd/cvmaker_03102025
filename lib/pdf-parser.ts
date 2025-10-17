@@ -1,13 +1,5 @@
-// Lightweight PDF text extraction using pdfjs-dist legacy build
-// Robust für Node/Server (keine Worker, nur Uint8Array)
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore - pdfjs-dist provides JS modules
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
-
-// Keine Worker im Server-Kontext verwenden
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-pdfjsLib.GlobalWorkerOptions.workerSrc = undefined
+// Robuste PDF-Text-Extraktion mit pdf-parse
+// Funktioniert zuverlässig in Production-Umgebungen
 
 function toUint8(input: Buffer | Uint8Array | ArrayBuffer): Uint8Array {
   // Bereits Uint8Array → direkt zurückgeben
@@ -23,43 +15,53 @@ function toUint8(input: Buffer | Uint8Array | ArrayBuffer): Uint8Array {
   }
   
   // Node Buffer → Uint8Array
-  // Type-Guard um TypeScript zu helfen
   if (Buffer.isBuffer(input)) {
     console.log('✅ Konvertiere Node Buffer zu Uint8Array')
-    // Expliziter Cast zu Buffer für TypeScript
-    const buffer = input as Buffer
-    // Erstelle eine NEUE Uint8Array-Kopie (wichtiger für pdfjs-dist)
-    const uint8 = new Uint8Array(buffer.length)
-    for (let i = 0; i < buffer.length; i++) {
-      uint8[i] = buffer[i]
-    }
-    return uint8
+    return new Uint8Array(input)
   }
   
-  // Sollte nie erreicht werden, aber für TypeScript
   throw new Error(`Unsupported binary input type. Expected Uint8Array, ArrayBuffer, or Buffer.`)
 }
 
 export async function extractTextFromPDF(buffer: Buffer | Uint8Array | ArrayBuffer): Promise<string> {
   try {
-    const uint8 = toUint8(buffer)
-    const loadingTask = pdfjsLib.getDocument({ data: uint8, useSystemFonts: true } as any)
-    const pdf = await loadingTask.promise
-
-    let fullText = ''
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i)
-      const textContent = await page.getTextContent()
-      const pageText = (textContent.items as Array<{ str?: string }>)
-        .map((item) => item?.str || '')
-        .join(' ')
-      fullText += pageText + '\n'
+    console.log('📄 Starte PDF-Text-Extraktion...')
+    
+    // Konvertiere zu Buffer für pdf-parse
+    let pdfBuffer: Buffer
+    
+    if (Buffer.isBuffer(buffer)) {
+      pdfBuffer = buffer
+    } else if (buffer instanceof Uint8Array) {
+      // Uint8Array zu Buffer
+      pdfBuffer = Buffer.from(buffer)
+    } else if (buffer instanceof ArrayBuffer) {
+      // ArrayBuffer zu Buffer
+      pdfBuffer = Buffer.from(buffer)
+    } else {
+      throw new Error('Ungültiger Input-Typ für PDF-Parsing')
     }
-    return fullText.trim()
+    
+    console.log(`📊 PDF-Buffer-Größe: ${pdfBuffer.length} bytes`)
+    
+    // Verwende pdf-parse für robuste Text-Extraktion
+    // @ts-ignore - pdf-parse hat keine TypeScript-Definitionen
+    const pdfParse = (await import('pdf-parse')).default
+    const data = await pdfParse(pdfBuffer, {
+      // Optionen für bessere Kompatibilität
+      max: 0, // Keine Seitenbegrenzung
+    })
+    
+    console.log(`✅ PDF erfolgreich geparst: ${data.numpages} Seiten, ${data.text.length} Zeichen extrahiert`)
+    
+    // Bereinige den Text
+    const cleanedText = data.text
+      .replace(/\s+/g, ' ') // Mehrfache Leerzeichen zu einem
+      .trim()
+    
+    return cleanedText
   } catch (error: any) {
-    // Re-throw with readable message; upstream code will handle fallback
+    console.error('❌ PDF-Parsing-Fehler:', error)
     throw new Error(`PDF-Verarbeitung fehlgeschlagen: ${error?.message || String(error)}`)
   }
 }
-
-
