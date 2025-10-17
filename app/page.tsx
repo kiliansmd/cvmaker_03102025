@@ -286,28 +286,17 @@ export default function HomePage() {
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
       } else {
-        // Fallback: Minimalprofil clientseitig erstellen
-        console.warn("⚠️ Unerwartete Antwort von Server Action – Fallback aktiv.", result)
-        let attachments: any[] = []
-        if (cvFile) {
-          const fileBuffer = await cvFile.arrayBuffer()
-          const blob = new Blob([fileBuffer], { type: cvFile.type || 'application/octet-stream' })
-          const url = URL.createObjectURL(blob)
-          attachments = [{ name: cvFile.name, type: cvFile.type, size: cvFile.size, url, file: cvFile }]
-        }
-        const fallback = buildClientFallbackProfile(
-          formData.name,
-          formData.position,
-          formData.location,
-          formData.salary,
-          formData.availability,
-          formData.contactPerson,
-          formData.contactPhone,
-          formData.contactEmail,
-          attachments
-        )
-        setGeneratedProfile(fallback)
-        setError("Die AI-Antwort war nicht verwertbar – es wurde ein Basisprofil erstellt.")
+        // Server hat Fehler zurückgegeben
+        console.error("❌ Server-Action Fehler:", result)
+        const errorMsg = (result as any)?.error || "Unbekannter Fehler beim CV-Processing"
+        const errorCode = (result as any)?.code || "UNKNOWN"
+        
+        console.error("❌ Error-Code:", errorCode)
+        console.error("❌ Error-Message:", errorMsg)
+        
+        setError(`CV-Verarbeitung fehlgeschlagen: ${errorMsg}`)
+        setIsGenerating(false)
+        return
       }
     } catch (err: any) {
       console.error("❌ Fehler bei der Profilerstellung:", err)

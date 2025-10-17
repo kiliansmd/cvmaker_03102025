@@ -87,37 +87,80 @@ export async function processCVAction(formData: FormData): Promise<ProcessCVResu
     let parsedCV: ParsedCV | null = null
     const hasSufficientText = cvText.trim().length >= 50
 
-    if (hasSufficientText) {
-      console.log("🤖 Parse CV mit OpenAI...")
-      console.log(`📊 CV-Text-Länge: ${cvText.length} Zeichen`)
-      console.log(`📊 Erste 500 Zeichen des CV-Texts:\n${cvText.substring(0, 500)}\n`)
+    console.log(`🔍 Text-Check: ${cvText.length} Zeichen extrahiert, hasSufficientText=${hasSufficientText}`)
+
+    if (!hasSufficientText) {
+      console.error(`❌ KRITISCH: Text zu kurz (${cvText.length} Zeichen)! Minimum: 50 Zeichen`)
+      console.error(`❌ Text-Content (komplett): "${cvText}"`)
       
-      try {
-        parsedCV = await parseCVWithAI(cvText, validatedData.additionalInfo)
-        console.log("✅ CV erfolgreich geparst")
-        console.log("📊 Geparste Daten (vor Profil-Gen):", JSON.stringify({
-          name: parsedCV.personalInfo?.name,
-          experienceCount: parsedCV.experience?.length,
-          skillsCount: parsedCV.skills?.technical?.length,
-          educationCount: parsedCV.education?.length,
-        }))
-      } catch (parseError: any) {
-        console.error("❌ OpenAI Parsing-Fehler:", parseError)
-        console.error("❌ Error-Type:", parseError?.constructor?.name)
-        console.error("❌ Error-Code:", parseError?.code)
-        console.error("❌ Error-Message:", parseError?.message)
-        
-        // Bei OpenAI-Fehler: Informiere User aber fahre mit Basisprofil fort
-        const errorMessage = getUserFriendlyErrorMessage(parseError)
-        console.warn(`⚠️ Fallback: ${errorMessage}`)
-      }
-    } else {
-      console.warn(`⚠️ Text zu kurz (${cvText.length} Zeichen), überspringe OpenAI-Parsing`)
+      // Werfe Fehler statt Fallback bei zu wenig Text
+      throw new AppError(
+        ErrorCode.FILE_EXTRACTION_FAILED,
+        `Die Datei konnte nicht korrekt gelesen werden. Es wurden nur ${cvText.length} Zeichen extrahiert. Bitte versuchen Sie es mit einer DOCX-Datei oder einer anderen Datei.`,
+        400,
+        { extractedLength: cvText.length, fileName: file.name }
+      )
     }
 
-    // 5. Fallback: Erstelle Minimalprofil aus Formdaten
+    console.log("🤖 Starte OpenAI CV-Parsing...")
+    console.log(`📊 CV-Text-Länge: ${cvText.length} Zeichen`)
+    console.log(`📊 Erste 500 Zeichen des CV-Texts:\n${cvText.substring(0, 500)}\n`)
+    
+    try {
+      parsedCV = await parseCVWithAI(cvText, validatedData.additionalInfo)
+      
+      if (!parsedCV) {
+        throw new Error('parseCVWithAI returned null')
+      }
+      
+      console.log("✅ CV erfolgreich geparst")
+      console.log("📊 Geparste Daten (DetailCheck):", JSON.stringify({
+        name: parsedCV.personalInfo?.name,
+        location: parsedCV.personalInfo?.location,
+        experienceCount: parsedCV.experience?.length,
+        experienceFirstTitle: parsedCV.experience?.[0]?.title,
+        experienceFirstCompany: parsedCV.experience?.[0]?.company,
+        skillsCount: parsedCV.skills?.technical?.length,
+        skillsFirst3: parsedCV.skills?.technical?.slice(0, 3),
+        educationCount: parsedCV.education?.length,
+        educationFirst: parsedCV.education?.[0]?.degree,
+        summary: parsedCV.summary?.substring(0, 100),
+      }, null, 2))
+      
+      // Validiere dass wir echte Daten haben
+      const hasRealData = 
+        (parsedCV.experience?.length || 0) > 0 ||
+        (parsedCV.skills?.technical?.length || 0) > 0 ||
+        (parsedCV.education?.length || 0) > 0
+      
+      if (!hasRealData) {
+        console.error('❌ WARNUNG: OpenAI hat keine verwertbaren Daten zurückgegeben!')
+        console.error('❌ ParsedCV:', JSON.stringify(parsedCV, null, 2))
+      }
+      
+    } catch (parseError: any) {
+      console.error("❌ ===== OpenAI PARSING FEHLER =====")
+      console.error("❌ Error-Type:", parseError?.constructor?.name)
+      console.error("❌ Error-Code:", parseError?.code)
+      console.error("❌ Error-Message:", parseError?.message)
+      console.error("❌ Error-Stack:", parseError?.stack?.substring(0, 500))
+      console.error("❌ ===== END ERROR =====")
+      
+      // Re-throw Error statt Fallback - User muss wissen dass es fehlschlug
+      throw new AppError(
+        ErrorCode.CV_PARSING_FAILED,
+        `CV-Parsing mit OpenAI fehlgeschlagen: ${parseError?.message || 'Unbekannter Fehler'}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support.`,
+        500,
+        { originalError: parseError }
+      )
+    }
+
     if (!parsedCV) {
-      parsedCV = createFallbackProfile(validatedData)
+      throw new AppError(
+        ErrorCode.CV_PARSING_FAILED,
+        'CV-Parsing lieferte keine Daten. Bitte versuchen Sie es erneut.',
+        500
+      )
     }
 
     // 6. Generiere finales Kandidaten-Profil

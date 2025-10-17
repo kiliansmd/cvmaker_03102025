@@ -36,15 +36,33 @@ export async function extractTextFromFile(file: File): Promise<string> {
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
     const { extractTextFromPDF } = await import('./pdf-parser')
-    return await extractTextFromPDF(buffer)
+    const text = await extractTextFromPDF(buffer)
+    console.log(`✅ PDF-Text extrahiert: ${text.length} Zeichen`)
+    
+    if (text.length < 100) {
+      console.warn('⚠️ PDF-Extraktion lieferte sehr wenig Text - möglicherweise gescanntes PDF')
+      console.warn('⚠️ Extrahierter Text:', text)
+    }
+    
+    return text
   } catch (error) {
-    console.error('PDF-Parsing-Fehler:', error)
+    console.error('❌ PDF-Parsing-Fehler:', error)
+    console.warn('⚠️ Versuche Fallback: UTF-8 decode')
+    
     try {
       const text = buffer.toString('utf-8')
-      return text.replace(/[^\x20-\x7E\n\r\t]/g, ' ').trim()
-    } catch {
+      const cleaned = text.replace(/[^\x20-\x7E\n\r\täöüÄÖÜß]/g, ' ').trim()
+      
+      if (cleaned.length < 50) {
+        throw new Error(`PDF-Fallback lieferte nur ${cleaned.length} Zeichen. Bitte DOCX verwenden.`)
+      }
+      
+      console.log(`✅ PDF-Fallback erfolgreich: ${cleaned.length} Zeichen`)
+      return cleaned
+    } catch (fallbackError) {
+      console.error('❌ PDF-Fallback fehlgeschlagen:', fallbackError)
       throw new Error(
-        'PDF konnte nicht verarbeitet werden. Bitte versuchen Sie es mit einer DOCX-Datei oder konvertieren Sie die PDF.',
+        'PDF konnte nicht verarbeitet werden (möglicherweise gescanntes PDF ohne Text-Layer). Bitte versuchen Sie es mit einer DOCX-Datei.',
       )
     }
   }
