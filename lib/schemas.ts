@@ -225,7 +225,7 @@ export const EnvironmentSchema = z.object({
     .string()
     .min(1, 'OPENAI_API_KEY ist erforderlich')
     .startsWith('sk-', 'OPENAI_API_KEY muss mit sk- beginnen'),
-  OPENAI_MODEL: z.string().optional().default('gpt-4o-mini'),
+  OPENAI_MODEL: z.string().optional().default('gpt-4o'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PUPPETEER_EXECUTABLE_PATH: z.string().optional(),
   // Optional: Background-Agent Key (z.B. für externe Worker-Dienste)

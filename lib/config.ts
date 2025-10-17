@@ -36,7 +36,7 @@ function validateEnvironment(): Environment {
       console.warn('⚠️ Environment-Validierung übersprungen (Build-Zeit)')
       return {
         OPENAI_API_KEY: 'sk-build-dummy',
-        OPENAI_MODEL: 'gpt-4o-mini',
+        OPENAI_MODEL: 'gpt-4o',
         NODE_ENV: (process.env.NODE_ENV as any) || 'production',
         PUPPETEER_EXECUTABLE_PATH: undefined,
         BACKGROUND_AGENT_KEY: undefined,
