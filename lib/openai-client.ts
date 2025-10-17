@@ -31,6 +31,9 @@ class OpenAIClient {
    */
   async parseCV(cvText: string, additionalInfo?: string): Promise<ParsedCV> {
     console.log('🔑 OpenAI-Client verwendet API-Key:', config.OPENAI_API_KEY.substring(0, 15) + '...')
+    if (config.BACKGROUND_AGENT_KEY) {
+      console.log('🤖 Background-Agent aktiv:', config.BACKGROUND_AGENT_KEY.substring(0, 8) + '...')
+    }
     console.log('🔑 OpenAI-Model:', config.OPENAI_MODEL)
     
     if (!cvText || cvText.trim().length < 50) {
@@ -50,21 +53,43 @@ class OpenAIClient {
     try {
       const response = await withRetry(
         async () => {
-          return await this.client.chat.completions.create({
-            model: config.OPENAI_MODEL,
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            response_format: { type: 'json_object' },
-            temperature: 0.2, // Leicht erhöht für besseres Verständnis bei komplexen CVs
-            max_tokens: 4000, // Erhöht für längere CVs und vollständige Extraktion
-          })
+          // Primärer Versuch mit konfiguriertem Modell
+          try {
+            return await this.client.chat.completions.create({
+              model: config.OPENAI_MODEL,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+              ],
+              response_format: { type: 'json_object' },
+              temperature: 0.2,
+              max_tokens: 4000,
+            })
+          } catch (primaryError: any) {
+            // Fallback bei 429 TPM-Überschreitung: nutze größeres Modell
+            const message = primaryError?.message?.toLowerCase() || ''
+            const status = primaryError?.status || primaryError?.response?.status
+            const isRateLimit = status === 429 || message.includes('rate limit') || message.includes('tokens per min')
+            if (!isRateLimit) throw primaryError
+
+            const fallbackModel = this.pickFallbackModel(config.OPENAI_MODEL)
+            console.warn(`⚠️ Rate-Limit/TPM-Überschreitung erkannt. Versuche Fallback-Modell: ${fallbackModel}`)
+            return await this.client.chat.completions.create({
+              model: fallbackModel,
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: this.truncateForTPM(userPrompt) },
+              ],
+              response_format: { type: 'json_object' },
+              temperature: 0.2,
+              max_tokens: 3500,
+            })
+          }
         },
         {
           maxRetries: 3,
           initialDelay: 1000,
-          timeout: 60000,
+          timeout: 90000,
           onRetry: (attempt, error) => {
             console.warn(`⚠️ OpenAI Retry ${attempt}/3:`, error?.message)
           },
@@ -140,8 +165,47 @@ class OpenAIClient {
   }
 
   /**
-   * Normalisiere OpenAI-Response mit robusten Fallbacks
+   * Wählt ein sinnvolles Fallback-Modell mit höheren Limits
    */
+  private buildModelFallbackChain(baseModel: string): string[] {
+    const chain = [baseModel]
+    // bevorzugte starke Modelle mit höheren Limits
+    const preferred = ['gpt-4.1', 'gpt-4o', 'gpt-4o-2024-08-06']
+    for (const m of preferred) {
+      if (!chain.includes(m)) chain.push(m)
+    }
+    // leichte Varianten als Low-cost Fallback
+    const light = ['gpt-4o-mini', 'gpt-4o-mini-2024-07-18']
+    for (const m of light) {
+      if (!chain.includes(m)) chain.push(m)
+    }
+    return chain
+  }
+
+  /**
+   * Wähle ein robustes Fallback-Modell
+   */
+  private pickFallbackModel(current: string | undefined): string {
+  if (!current) return 'gpt-4o'
+  const map: Record<string, string> = {
+    'gpt-4o-mini': 'gpt-4o',
+    'gpt-4o-mini-2024-07-18': 'gpt-4o',
+    'gpt-4o': 'gpt-4.1',
+    'gpt-4o-2024-08-06': 'gpt-4.1',
+  }
+  return map[current] || 'gpt-4o'
+  }
+
+  /**
+   * Kürzt extrem lange Prompts defensiv, um TPM zu reduzieren
+   */
+  private truncateForTPM(text: string, maxChars = 180000): string {
+  if (!text || text.length <= maxChars) return text
+  const head = text.slice(0, Math.floor(maxChars * 0.6))
+  const tail = text.slice(-Math.floor(maxChars * 0.4))
+  return `${head}\n\n... [gekürzt für Verarbeitung/TPM] ...\n\n${tail}`
+  }
+
   private normalizeOpenAIResponse(raw: any): ParsedCV {
     console.log("📝 Normalisiere OpenAI-Response...")
 

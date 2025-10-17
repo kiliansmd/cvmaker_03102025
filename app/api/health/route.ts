@@ -21,6 +21,7 @@ export async function GET() {
   // Environment-Check
   checks.environment = config.NODE_ENV
   checks.has_api_key = !!config.OPENAI_API_KEY && config.OPENAI_API_KEY.length > 0
+  checks.has_background_agent_key = !!config.BACKGROUND_AGENT_KEY
 
   // Gesamt-Status
   const isHealthy = checks.server && checks.openai === true
